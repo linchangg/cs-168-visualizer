@@ -6,7 +6,7 @@
 <title>CS 168 — Internet Architecture — Spring 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,750&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-chtml.js"></script>
 <script>
 MathJax = {
@@ -16,26 +16,32 @@ MathJax = {
 </script>
 <style>
 :root {
-  --ink: #0d1117;
-  --ink2: #1c2333;
-  --ink3: #6b7280;
-  --paper: #f4f1ea;
-  --paper2: #ebe6d8;
-  --paper3: #ddd5be;
-  --rule: #b8a87a;
-  --accent: #1f4e7a;       /* deep network blue */
-  --accent2: #c9722c;      /* burnt orange — packet color */
-  --gold: #b08020;
-  --green: #4a6b3a;
-  --red: #a8362b;
-  --purple: #5a3d6b;
-  --faint: #a89878;
-  --serif: 'Fraunces', Georgia, serif;
-  --sans: 'Inter', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', monospace;
+  --ink: #0b1220;
+  --ink2: #111a2e;
+  --ink3: #52607a;
+  --paper: #f7f9fc;
+  --paper2: #eef3fb;
+  --paper3: #e5ecf8;
+  --rule: rgba(17,26,46,.12);
+  --shadow: 0 14px 40px rgba(9, 14, 29, .08);
+  --shadow-sm: 0 8px 20px rgba(9, 14, 29, .07);
+  --accent: #0ea5e9;       /* chapter accent */
+  --accent-rgb: 14,165,233;
+  --accent-deep: #0284c7;
+  --accent2: #f97316;      /* orange highlight */
+  --gold: #c48a1b;
+  --green: #1a7f4a;
+  --red: #cc2d3a;
+  --purple: #6d28d9;
+  --faint: rgba(17,26,46,.5);
+  --sans: 'Space Grotesk', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --mono: var(--sans);
+  --script: 'Fraunces', ui-serif, Georgia, serif;
+  --radius: 14px;
+  --radius-sm: 10px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: auto; }
 body {
   background: var(--paper);
   color: var(--ink);
@@ -44,20 +50,34 @@ body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
+body.home-mode {
+  /* Home is a full-screen title screen */
+  overflow: hidden;
+}
 
 body::before {
   content: '';
   position: fixed; inset: 0;
   background-image:
-    radial-gradient(circle at 20% 30%, rgba(31,78,122,.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(201,114,44,.04) 0%, transparent 50%);
+    radial-gradient(circle at 18% 24%, rgba(var(--accent-rgb),.08) 0%, transparent 52%),
+    radial-gradient(circle at 82% 74%, rgba(249,115,22,.08) 0%, transparent 52%),
+    radial-gradient(circle at 55% 50%, rgba(109,40,217,.05) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
+}
+
+/* ─── Confetti (bottom overscroll easter egg) ─── */
+#confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
 }
 
 .app {
   display: grid;
   grid-template-columns: 290px 1fr;
+  grid-template-rows: 1fr auto;
   min-height: 100vh;
   position: relative;
   z-index: 1;
@@ -65,37 +85,44 @@ body::before {
 
 /* ─── SIDEBAR ─── */
 .sidebar {
-  background: var(--ink);
-  color: #d6d3c4;
-  padding: 1.5rem 0;
+  background: rgba(255,255,255,.72);
+  color: var(--ink);
+  padding: 1.25rem 0;
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-y: auto;
-  border-right: 1px solid rgba(255,255,255,.05);
+  border-right: 1px solid var(--rule);
+  backdrop-filter: blur(10px);
+  grid-row: 1 / -1;
 }
 .sb-brand {
   padding: 0 1.5rem 1.25rem;
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid var(--rule);
 }
 .sb-brand .num {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: .15em;
-  color: #b08020;
+  color: var(--accent);
   text-transform: uppercase;
 }
 .sb-brand .title {
-  font-family: var(--serif);
-  font-size: 22px;
-  font-weight: 600;
-  color: #f4f1ea;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
   margin-top: 4px;
-  letter-spacing: -.01em;
+  letter-spacing: -.02em;
 }
+.sb-brand .title.brand-link {
+  cursor: pointer;
+  user-select: none;
+}
+.sb-brand .title.brand-link:hover { color: var(--ink2); }
 .sb-brand .sub {
   font-size: 12px;
-  color: #8a8474;
+  color: var(--ink3);
   margin-top: 2px;
 }
 .sb-group {
@@ -106,55 +133,276 @@ body::before {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .14em;
-  color: #b08020;
+  color: var(--ink3);
   padding: .65rem 1.5rem .35rem;
 }
 .sb-item {
   display: block;
   padding: .42rem 1.5rem;
   font-size: 13px;
-  color: #c5bfaf;
+  color: rgba(17,26,46,.75);
   cursor: pointer;
   text-decoration: none;
   border-left: 2px solid transparent;
-  transition: all .12s;
+  border-radius: 10px;
+  margin: 2px .75rem;
+  transition: background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease, border-color .18s ease;
   line-height: 1.35;
+  will-change: transform;
 }
 .sb-item:hover {
-  background: rgba(255,255,255,.04);
-  color: #f4f1ea;
+  background: rgba(var(--accent-rgb),.08);
+  color: var(--ink);
+  transform: translateX(1px);
 }
 .sb-item.active {
-  background: rgba(176,128,32,.08);
-  border-left-color: #b08020;
-  color: #f4f1ea;
+  background: rgba(var(--accent-rgb),.12);
+  border-left-color: var(--accent);
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(var(--accent-rgb),.10);
 }
 .sb-item .num {
   font-family: var(--mono);
   font-size: 10px;
-  color: #8a8474;
+  color: var(--ink3);
   display: inline-block;
   width: 22px;
 }
 
 /* ─── MAIN ─── */
 .main {
-  padding: 3rem 4rem 6rem;
-  max-width: 920px;
+  padding: 0 0 6rem;
+  max-width: none;
+  width: 100%;
+  grid-row: 1;
 }
 @media (max-width: 1100px) {
-  .main { padding: 2rem 2rem 4rem; }
+  .main { padding: 0 0 4rem; }
   .app { grid-template-columns: 240px 1fr; }
 }
 
-.sec { display: none; }
-.sec.on { display: block; }
+.chapter { display: none; }
+.chapter.on { display: block; animation: secIn .22s ease-out; }
+.sec { display: block; }
+
+.sec {
+  scroll-margin-top: 14px;
+}
+.chapter-content {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 4rem;
+  padding-top: 2.4rem;
+  padding-bottom: 4rem;
+}
+/* Home should be full-bleed and unpadded */
+.chapter[data-chapter="home"] .chapter-content {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  padding-bottom: 0;
+}
+
+/* ─── HOME / LANDING ─── */
+.home-hero {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.home-hero::before{
+  content:"";
+  position:absolute;
+  inset:-20%;
+  background:
+    radial-gradient(circle at 25% 30%, rgba(var(--accent-rgb),.18), transparent 55%),
+    radial-gradient(circle at 75% 35%, rgba(109,40,217,.12), transparent 58%),
+    radial-gradient(circle at 55% 78%, rgba(249,115,22,.10), transparent 60%);
+  pointer-events:none;
+  filter: blur(2px);
+}
+.home-card {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 4.25rem 4.25rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+}
+.home-title {
+  font-family: var(--script);
+  font-weight: 750;
+  font-size: clamp(2.6rem, 5.2vw, 4.2rem);
+  letter-spacing: -.02em;
+  line-height: 1.02;
+  color: var(--ink);
+}
+.home-sub {
+  margin-top: .9rem;
+  font-size: 1.1rem;
+  color: var(--ink3);
+  max-width: 64ch;
+}
+.home-meta {
+  margin-top: 1.15rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  align-items: center;
+}
+.home-by {
+  margin-top: 1.1rem;
+  color: rgba(17,26,46,.78);
+  font-size: 13px;
+}
+.home-actions {
+  margin-top: 1.6rem;
+  display: flex;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+}
+.home-link{
+  appearance:none;
+  background:transparent;
+  border:0;
+  padding:0;
+  font: inherit;
+  color: rgba(17,26,46,.88);
+  cursor:pointer;
+  font-weight:700;
+  letter-spacing:.01em;
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  font-size: 1.05rem;
+  transition: color .18s ease, transform .18s ease;
+}
+.home-link .arr{
+  color: var(--accent);
+  transition: transform .18s ease;
+}
+.home-link::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-6px;
+  height:2px;
+  background: rgba(var(--accent-rgb),.9);
+  transform: scaleX(0);
+  transform-origin:left;
+  transition: transform .18s ease;
+  border-radius: 999px;
+}
+.home-link:hover{
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+.home-link:hover .arr{ transform: translateX(2px); }
+.home-link:hover::after{ transform: scaleX(1); }
+.home-link:active{ transform: translateY(0); }
+
+/* “Go to original content” links under section headers */
+.orig-link{
+  appearance:none;
+  background:transparent;
+  border:0;
+  padding:0;
+  font: inherit;
+  color: rgba(17,26,46,.82);
+  cursor:pointer;
+  font-weight:700;
+  letter-spacing:.01em;
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  font-size: .95rem;
+  margin-top: .6rem;
+  transition: color .18s ease, transform .18s ease;
+  text-decoration: none;
+}
+.orig-link .arr{ color: var(--accent); transition: transform .18s ease; }
+.orig-link::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-5px;
+  height:2px;
+  background: rgba(var(--accent-rgb),.9);
+  transform: scaleX(0);
+  transform-origin:left;
+  transition: transform .18s ease;
+  border-radius: 999px;
+}
+.orig-link:hover{ color: var(--ink); transform: translateY(-1px); }
+.orig-link:hover .arr{ transform: translateX(2px); }
+.orig-link:hover::after{ transform: scaleX(1); }
+.orig-link:active{ transform: translateY(0); }
+@media (max-width: 800px) {
+  .home-card { padding: 3.25rem 2rem; }
+}
+@media (max-width: 1100px) {
+  .chapter-content { padding: 0 2rem; }
+}
+
+/* Comfortable separation between sections (chapter scroll mode) */
+.chapter.on .chapter-content section.sec + section.sec {
+  margin-top: 2.15rem;
+  padding-top: 2.15rem;
+  border-top: 0;
+}
+@keyframes secIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sec.on { animation: none; }
+  html { scroll-behavior: auto; }
+}
 
 .section-header {
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
   padding-bottom: 1rem;
   margin-bottom: 2rem;
 }
+.section-header .sec-headbar{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+.section-header .sec-toggle{
+  flex:0 0 auto;
+  width:32px;
+  height:32px;
+  border-radius:12px;
+  border:1px solid var(--rule);
+  background:rgba(17,26,46,.04);
+  color:rgba(17,26,46,.78);
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.section-header .sec-toggle:hover{
+  background:rgba(var(--accent-rgb),.10);
+  border-color:rgba(var(--accent-rgb),.22);
+  box-shadow:0 10px 22px rgba(var(--accent-rgb),.10);
+}
+.section-header .sec-toggle:active{ transform: translateY(1px); }
+.section-header .sec-toggle::before{ content:"▾"; font-size:14px; line-height:1; }
+section.sec.sec-collapsed .section-header .sec-toggle::before{ content:"▸"; }
+section.sec .sec-body{ display:block; }
+section.sec.sec-collapsed .sec-body{ display:none; }
+section.sec.sec-collapsed .section-header{ margin-bottom: 1rem; }
 .section-num {
   font-family: var(--mono);
   font-size: 11px;
@@ -164,29 +412,30 @@ body::before {
   display: block;
   margin-bottom: .35rem;
 }
+.chapter.on .section-num { display: none; }
 .section-header h1 {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 2.2rem;
-  font-weight: 600;
-  letter-spacing: -.02em;
+  font-weight: 750;
+  letter-spacing: -.03em;
   color: var(--ink);
   line-height: 1.1;
 }
 .section-header .lede {
-  font-family: var(--serif);
-  font-style: italic;
+  font-family: var(--sans);
+  font-style: normal;
   font-size: 1.05rem;
   color: var(--ink3);
   margin-top: .5rem;
 }
 
 h2 {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 750;
   margin: 2.25rem 0 .85rem;
   color: var(--ink);
-  letter-spacing: -.01em;
+  letter-spacing: -.02em;
 }
 h3 {
   font-family: var(--mono);
@@ -198,22 +447,242 @@ h3 {
   font-weight: 600;
 }
 p { margin: .65rem 0; }
-strong { color: var(--ink); font-weight: 600; }
+/* Highlight important words already marked with <strong> */
+strong { color: var(--accent); font-weight: 700; }
 em { color: var(--ink2); }
+
+/* ─── SUMMARY / CARD LAYOUT (non-destructive) ─── */
+.sec .sec-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.card {
+  background: rgba(255,255,255,.78);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+  width: 100%;
+}
+.sec-grid > .span { width: 100%; }
+.card .card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card .card-head > h2 {
+  margin: 0;
+}
+.card .card-toggle {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid var(--rule);
+  background: rgba(17,26,46,.04);
+  color: rgba(17,26,46,.78);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.card .card-toggle:hover {
+  background: rgba(var(--accent-rgb),.10);
+  border-color: rgba(var(--accent-rgb),.22);
+  box-shadow: 0 10px 22px rgba(var(--accent-rgb),.10);
+}
+.card .card-toggle:active { transform: translateY(1px); }
+.card .card-toggle::before { content: "▾"; font-size: 14px; line-height: 1; }
+.card.collapsed .card-toggle::before { content: "▸"; }
+.card .card-body { margin-top: .65rem; }
+.card.collapsed .card-body { display: none; }
+.card.collapsed {
+  padding-bottom: .85rem;
+}
+.card-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 980px) {
+  .card-row.row2 { grid-template-columns: 1fr 1fr; }
+}
+.card-row > .card {
+  height: 100%;
+}
+.card-row > .card:hover {
+  transform: translateY(-1px);
+}
+.card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+  border-color: rgba(var(--accent-rgb),.20);
+}
+.card.full { grid-column: 1 / -1; }
+.sec-grid .card.full { width: 100%; }
+.card > h2 {
+  margin: 0 0 .65rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+.card > h3 {
+  margin: .95rem 0 .45rem;
+}
+.card .muted {
+  color: var(--ink3);
+}
+.card .meta {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  margin-bottom: .65rem;
+  flex-wrap: wrap;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: rgba(17,26,46,.04);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(17,26,46,.72);
+}
+.tag.blue { border-color: rgba(var(--accent-rgb),.22); background: rgba(var(--accent-rgb),.08); color: var(--accent); }
+.tag.orange { border-color: rgba(249,115,22,.22); background: rgba(249,115,22,.08); color: var(--accent2); }
+.tag.green { border-color: rgba(26,127,74,.22); background: rgba(26,127,74,.08); color: var(--green); }
+.tag.purple { border-color: rgba(109,40,217,.22); background: rgba(109,40,217,.07); color: var(--purple); }
+.tag.red { border-color: rgba(204,45,58,.22); background: rgba(204,45,58,.07); color: var(--red); }
+
+/* Subtle, non-sterile card tints */
+.card.tint-blue {
+  background: linear-gradient(180deg, rgba(var(--accent-rgb),.06), rgba(255,255,255,.78));
+}
+.card.tint-purple {
+  background: linear-gradient(180deg, rgba(109,40,217,.05), rgba(255,255,255,.78));
+}
+.card.tint-amber {
+  background: linear-gradient(180deg, rgba(249,115,22,.05), rgba(255,255,255,.78));
+}
+.card table, .card .diagram-wrap, .card .math-block, .card .demo-panel { margin: .75rem 0; }
+.diagram-wrap.in-card,
+.math-block.in-card,
+.demo-panel.in-card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: .75rem 0;
+}
+.diagram-wrap.in-card .caption {
+  margin-top: .5rem;
+}
+.math-block.in-card { text-align: left; }
+
+/* ─── CONCEPT CHECK ─── */
+.quiz {
+  position: relative;
+  overflow: hidden;
+}
+.quiz::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 18% 20%, rgba(var(--accent-rgb),.10), transparent 60%),
+              radial-gradient(circle at 82% 70%, rgba(249,115,22,.10), transparent 60%);
+  pointer-events: none;
+  opacity: .75;
+}
+.quiz > * { position: relative; }
+.quiz .qtitle {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: .5rem;
+}
+.quiz .qtitle h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.quiz .qprompt { margin: .5rem 0 .75rem; color: rgba(17,26,46,.85); }
+.quiz .choices {
+  display: grid;
+  gap: 10px;
+  margin: .75rem 0 .9rem;
+}
+.quiz label.choice {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: .65rem .75rem;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: rgba(255,255,255,.75);
+  cursor: pointer;
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.quiz label.choice:hover {
+  border-color: rgba(var(--accent-rgb),.25);
+  box-shadow: 0 10px 22px rgba(var(--accent-rgb),.10);
+  transform: translateY(-1px);
+}
+.quiz input[type="radio"] { margin-top: 2px; accent-color: var(--accent); }
+.quiz .actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.quiz .feedback {
+  margin-top: .75rem;
+  padding: .65rem .8rem;
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  background: rgba(255,255,255,.78);
+  color: rgba(17,26,46,.85);
+  display: none;
+}
+.quiz .feedback.ok {
+  display: block;
+  border-color: rgba(26,127,74,.28);
+  background: rgba(26,127,74,.08);
+}
+.quiz .feedback.bad {
+  display: block;
+  border-color: rgba(204,45,58,.28);
+  background: rgba(204,45,58,.06);
+}
+.quiz .feedback .k {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-right: 8px;
+}
 
 code {
   font-family: var(--mono);
   font-size: .9em;
-  background: var(--paper2);
+  background: rgba(var(--accent-rgb),.08);
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: 6px;
   color: var(--accent);
 }
 pre {
-  background: var(--ink);
-  color: #d6d3c4;
+  background: #0a1020;
+  color: rgba(255,255,255,.88);
   padding: 1rem 1.25rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
   overflow-x: auto;
   font-family: var(--mono);
   font-size: 12px;
@@ -225,13 +694,21 @@ pre code { background: none; color: inherit; padding: 0; }
 ul, ol { margin: .5rem 0 .85rem 1.5rem; }
 li { margin: .25rem 0; }
 
+/* Ensure diagrams don't reintroduce a different font */
+svg text,
+svg tspan {
+  font-family: var(--sans) !important;
+}
+
 /* ─── BOXES ─── */
 .def-box {
-  background: var(--paper2);
+  background: rgba(255,255,255,.7);
+  border: 1px solid var(--rule);
   border-left: 3px solid var(--accent);
   padding: .75rem 1.1rem;
   margin: 1rem 0;
-  border-radius: 0 4px 4px 0;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 24px rgba(9,14,29,.06);
 }
 .def-box .label {
   font-family: var(--mono);
@@ -242,18 +719,19 @@ li { margin: .25rem 0; }
   margin-bottom: .25rem;
 }
 .def-box .term {
-  font-family: var(--serif);
-  font-weight: 600;
+  font-family: var(--sans);
+  font-weight: 700;
   font-size: 1.05rem;
   color: var(--ink);
 }
 
 .callout {
-  background: var(--paper2);
+  background: rgba(255,255,255,.7);
+  border: 1px solid var(--rule);
   border-left: 3px solid var(--gold);
   padding: .75rem 1.1rem;
   margin: 1rem 0;
-  border-radius: 0 4px 4px 0;
+  border-radius: var(--radius-sm);
   font-size: .94em;
 }
 .callout.green { border-left-color: var(--green); }
@@ -268,27 +746,14 @@ li { margin: .25rem 0; }
   margin-bottom: .25rem;
 }
 
-.tldr {
-  background: linear-gradient(135deg, rgba(176,128,32,.12) 0%, rgba(176,128,32,.04) 100%);
-  border: 1px solid rgba(176,128,32,.3);
-  padding: 1rem 1.25rem;
-  margin: 1rem 0 1.5rem;
-  border-radius: 5px;
-  font-size: .96em;
-}
-.tldr .label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: .15em;
-  color: var(--gold);
-  font-weight: 600;
-  margin-bottom: .35rem;
-}
+.tldr-card .meta { margin: 0 0 .65rem; }
+.tldr-card .meta .tag { text-transform: none; letter-spacing: .02em; font-size: 11px; }
+.tldr-card > h2 { margin: 0 0 .5rem; font-size: 1.25rem; }
 
 .math-block {
-  background: var(--paper3);
+  background: rgba(255,255,255,.72);
   border: 1px solid var(--rule);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: .9rem 1.25rem;
   margin: 1rem 0;
   overflow-x: auto;
@@ -307,7 +772,7 @@ th, td {
   border-bottom: 1px solid var(--rule);
 }
 th {
-  background: var(--paper2);
+  background: rgba(var(--accent-rgb),.06);
   font-family: var(--mono);
   font-size: 10.5px;
   text-transform: uppercase;
@@ -315,16 +780,17 @@ th {
   color: var(--ink2);
   font-weight: 600;
 }
-tr:hover td { background: var(--paper2); }
+tr:hover td { background: rgba(var(--accent-rgb),.04); }
 
 /* ─── SVG DIAGRAMS ─── */
 .diagram-wrap {
-  background: var(--paper2);
+  background: rgba(255,255,255,.72);
   border: 1px solid var(--rule);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 1.25rem;
   margin: 1.25rem 0;
   text-align: center;
+  box-shadow: var(--shadow-sm);
 }
 .diagram-wrap .caption {
   font-family: var(--mono);
@@ -337,12 +803,16 @@ tr:hover td { background: var(--paper2); }
 
 /* ─── DEMO PANELS ─── */
 .demo-panel {
-  background: var(--paper2);
+  background: rgba(255,255,255,.78);
   border: 1px solid var(--rule);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 1.1rem 1.3rem;
   margin: 1.5rem 0;
+  box-shadow: var(--shadow-sm);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
+.demo-panel:hover { transform: translateY(-1px); box-shadow: var(--shadow); border-color: rgba(var(--accent-rgb),.22); }
+.demo-panel:hover { transform: translateY(-1px); box-shadow: var(--shadow); border-color: rgba(var(--accent-rgb),.22); }
 .demo-panel .demo-title {
   font-family: var(--mono);
   font-size: 11px;
@@ -379,22 +849,24 @@ tr:hover td { background: var(--paper2); }
 }
 button.run-btn {
   padding: .42rem 1rem;
-  background: var(--ink);
-  color: var(--paper);
-  border: none;
-  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(var(--accent-rgb),.95), color-mix(in srgb, var(--accent-deep) 92%, #000 8%));
+  color: #fff;
+  border: 1px solid rgba(var(--accent-rgb),.28);
+  border-radius: 12px;
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: .05em;
   cursor: pointer;
   text-transform: uppercase;
+  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
 }
-button.run-btn:hover { background: var(--accent); }
+button.run-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(var(--accent-rgb),.18); filter: brightness(1.03); }
+button.run-btn:active { transform: translateY(0); box-shadow: 0 8px 18px rgba(var(--accent-rgb),.14); }
 .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; }
 .stat {
-  background: var(--paper);
+  background: rgba(255,255,255,.72);
   padding: .55rem .85rem;
-  border-radius: 4px;
+  border-radius: 12px;
   border: 1px solid var(--rule);
   flex: 1;
   min-width: 110px;
@@ -422,7 +894,10 @@ footer {
   letter-spacing: .1em;
   border-top: 1px solid var(--rule);
   margin-top: 4rem;
+  grid-column: 2;
+  grid-row: 2;
 }
+body.home-mode footer { display: none; }
 
 .pill {
   display: inline-block;
@@ -430,14 +905,14 @@ footer {
   border-radius: 10px;
   font-family: var(--mono);
   font-size: 10px;
-  background: var(--paper3);
+  background: rgba(17,26,46,.06);
   color: var(--ink2);
   letter-spacing: .04em;
 }
-.pill.blue { background: rgba(31,78,122,.15); color: var(--accent); }
+.pill.blue { background: rgba(var(--accent-rgb),.12); color: var(--accent); }
 .pill.orange { background: rgba(201,114,44,.15); color: var(--accent2); }
-.pill.green { background: rgba(74,107,58,.15); color: var(--green); }
-.pill.red { background: rgba(168,54,43,.12); color: var(--red); }
+.pill.green { background: rgba(26,127,74,.12); color: var(--green); }
+.pill.red { background: rgba(204,45,58,.10); color: var(--red); }
 
 .kvtable td:first-child {
   font-family: var(--mono);
@@ -453,10 +928,10 @@ footer {
 
 <!-- ═════════ SIDEBAR ═════════ -->
 <nav class="sidebar">
-  <div class="sb-brand">
+  <div class="sb-brand" role="button" tabindex="0" onclick="show('home', this)">
     <div class="num">CS 168 · Spring 2026</div>
-    <div class="title">Internet Architecture</div>
-    <div class="sub">Applications → Wireless</div>
+    <div class="title brand-link">Internet Architecture</div>
+    <div class="sub" id="tab-tracker">Overview</div>
   </div>
 
   <a class="sb-item active" onclick="show('overview',this)"><span class="num">§0</span>Overview</a>
@@ -509,12 +984,31 @@ footer {
 
   <div class="sb-group">
     <div class="sb-group-label">Reference</div>
+    <a class="sb-item" onclick="show('tcp-recap',this)"><span class="num">§T</span>TCP Recap</a>
+    <a class="sb-item" onclick="show('routing-recap',this)"><span class="num">§R</span>Routing Recap</a>
     <a class="sb-item" onclick="show('glossary',this)"><span class="num">§G</span>Glossary</a>
   </div>
 </nav>
 
 <!-- ═════════ MAIN ═════════ -->
 <main class="main">
+
+<!-- ═════════ HOME ═════════ -->
+<section class="sec" id="home">
+  <div class="home-hero">
+    <div class="home-card">
+      <div class="home-title">Internet Architecture</div>
+      <div class="home-sub">
+        CS 168 — Spring 2026. A compact, scrollable chapter-based reference for the second half of the course.
+      </div>
+      <div class="home-by">Website by Linda Chang.</div>
+      <div class="home-actions">
+        <button class="home-link" onclick="show('overview', null)">Enter <span class="arr">→</span></button>
+        <button class="home-link" onclick="show('dns', null)">Jump to DNS <span class="arr">→</span></button>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- ═════════ OVERVIEW ═════════ -->
 <section class="sec on" id="overview">
@@ -579,10 +1073,10 @@ footer {
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .node { fill: #1f4e7a; }
-        .label-t { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #f4f1ea; }
+        .node { fill: var(--accent); }
+        .label-t { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #ffffff; }
         .zone-t { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #6b7280; }
-        .edge { stroke: #b8a87a; stroke-width: 1.5; fill: none; }
+        .edge { stroke: rgba(17,26,46,.22); stroke-width: 1.5; fill: none; }
       </style>
       <!-- Root -->
       <rect class="node" x="270" y="10" width="60" height="28" rx="4"/>
@@ -630,14 +1124,14 @@ footer {
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .box { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
-        .lbl { font-family: 'Inter', sans-serif; font-size: 11px; fill: #0d1117; }
-        .ar { stroke: #c9722c; stroke-width: 1.5; fill: none; marker-end: url(#arr); }
-        .arn { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #c9722c; }
+        .box { fill: #eef3fb; stroke: var(--accent); stroke-width: 1.5; }
+        .lbl { font-family: 'Inter', sans-serif; font-size: 11px; fill: #0b1220; }
+        .ar { stroke: #f97316; stroke-width: 1.5; fill: none; marker-end: url(#arr); }
+        .arn { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #f97316; }
       </style>
       <defs>
         <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#c9722c"/>
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316"/>
         </marker>
       </defs>
       <!-- You -->
@@ -682,9 +1176,9 @@ footer {
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 130" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .field { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1; }
-        .field2 { fill: #ddd5be; stroke: #1f4e7a; stroke-width: 1; }
-        .ft { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
+        .field { fill: #eef3fb; stroke: var(--accent); stroke-width: 1; }
+        .field2 { fill: #e5ecf8; stroke: var(--accent); stroke-width: 1; }
+        .ft { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0b1220; }
         .fs { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #6b7280; }
       </style>
       <rect class="field" x="20" y="20" width="120" height="30"/>
@@ -834,10 +1328,10 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .seg { stroke: #1f4e7a; stroke-width: 1.5; fill: none; }
-        .seg2 { stroke: #c9722c; stroke-width: 1.5; fill: none; }
+        .seg { stroke: var(--accent); stroke-width: 1.5; fill: none; }
+        .seg2 { stroke: #f97316; stroke-width: 1.5; fill: none; }
         .lbl { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #6b7280; }
-        .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; font-weight: 600; }
+        .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0b1220; font-weight: 600; }
       </style>
       <text class="lbl2" x="20" y="22">No pipelining</text>
       <line class="seg" x1="20" y1="40" x2="20" y2="80"/>
@@ -988,9 +1482,9 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 110" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .f { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1; }
-        .fp { fill: #ddd5be; stroke: #1f4e7a; stroke-width: 1; }
-        .ft { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
+        .f { fill: #eef3fb; stroke: var(--accent); stroke-width: 1; }
+        .fp { fill: #e5ecf8; stroke: var(--accent); stroke-width: 1; }
+        .ft { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0b1220; }
         .fs { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #6b7280; }
       </style>
       <rect class="f" x="20" y="30" width="60" height="40"/>
@@ -1055,10 +1549,10 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .sw { fill: #1f4e7a; stroke: #0d1117; stroke-width: 1; }
-        .h { fill: #c9722c; stroke: #0d1117; stroke-width: 1; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #f4f1ea; }
-        .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #0d1117; }
+        .sw { fill: var(--accent); stroke: rgba(17,26,46,.32); stroke-width: 1; }
+        .h { fill: #f97316; stroke: rgba(17,26,46,.32); stroke-width: 1; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #ffffff; }
+        .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #0b1220; }
         .l { stroke: #6b7280; stroke-width: 1.5; }
         .ldis { stroke: #a8362b; stroke-width: 1.5; stroke-dasharray: 4 3; }
       </style>
@@ -1111,7 +1605,7 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
 
   <div class="tldr">
     <div class="label">TL;DR</div>
-    To send an IP packet inside your local net, you need the destination's MAC address. ARP figures it out: <strong>broadcast</strong> "who has IP X?", target <strong>unicasts</strong> back its MAC. Cache result in ARP table.
+    To send an IP packet inside your local net, you need the destination's MAC address. ARP figures it out: <strong>broadcast</strong> "who has IP X?", target <strong>unicasts</strong> back its MAC. Cache result in ARP table. ARP runs at <strong>Layer 2</strong>, directly on Ethernet — <strong>not over UDP</strong>, not over IP.
   </div>
 
   <h2>The problem</h2>
@@ -1128,15 +1622,15 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .h { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
-        .arr { stroke: #c9722c; stroke-width: 1.5; fill: none; marker-end: url(#arr2); }
-        .arr2 { stroke: #4a6b3a; stroke-width: 1.5; fill: none; marker-end: url(#arr3); }
+        .h { fill: #eef3fb; stroke: var(--accent); stroke-width: 1.5; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0b1220; }
+        .arr { stroke: #f97316; stroke-width: 1.5; fill: none; marker-end: url(#arr2); }
+        .arr2 { stroke: #1a7f4a; stroke-width: 1.5; fill: none; marker-end: url(#arr3); }
         .at { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #6b7280; }
       </style>
       <defs>
-        <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker>
-        <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6b3a"/></marker>
+        <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker>
+        <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1a7f4a"/></marker>
       </defs>
       <rect class="h" x="20" y="60" width="100" height="50" rx="4"/>
       <text class="lbl" x="70" y="80" text-anchor="middle">A (sender)</text>
@@ -1155,7 +1649,7 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
       <text class="at" x="180" y="35">1. broadcast "who has 192.0.2.7?"</text>
 
       <line class="arr2" x1="240" y1="100" x2="120" y2="105"/>
-      <text class="at" x="180" y="130" fill="#4a6b3a">2. unicast "I'm 192.0.2.7, MAC=…"</text>
+      <text class="at" x="180" y="130" fill="#1a7f4a">2. unicast "I'm 192.0.2.7, MAC=…"</text>
     </svg>
     <div class="caption">ARP: broadcast question, unicast answer</div>
   </div>
@@ -1178,7 +1672,7 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
 
   <div class="tldr">
     <div class="label">TL;DR</div>
-    New device knows nothing about the local net. DHCP gives it: an IP address, subnet mask, default gateway IP, DNS server IP. <strong>4-step protocol: Discover → Offer → Request → Ack (DORA)</strong>.
+    New device knows nothing about the local net. DHCP gives it: an IP address, subnet mask, default gateway IP, DNS server IP. <strong>4-step protocol: Discover → Offer → Request → Ack (DORA)</strong>. Runs over <strong>UDP</strong> (ports 67/68).
   </div>
 
   <h2>What you need to learn</h2>
@@ -1201,15 +1695,15 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .b { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #0d1117; }
-        .arr { stroke: #c9722c; stroke-width: 1.5; fill: none; marker-end: url(#arr-d); }
-        .arr2 { stroke: #4a6b3a; stroke-width: 1.5; fill: none; marker-end: url(#arr-d2); }
-        .num { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #c9722c; font-weight: 600; }
+        .b { fill: #eef3fb; stroke: var(--accent); stroke-width: 1.5; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #0b1220; }
+        .arr { stroke: #f97316; stroke-width: 1.5; fill: none; marker-end: url(#arr-d); }
+        .arr2 { stroke: #1a7f4a; stroke-width: 1.5; fill: none; marker-end: url(#arr-d2); }
+        .num { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #f97316; font-weight: 600; }
       </style>
       <defs>
-        <marker id="arr-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker>
-        <marker id="arr-d2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6b3a"/></marker>
+        <marker id="arr-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker>
+        <marker id="arr-d2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1a7f4a"/></marker>
       </defs>
       <rect class="b" x="40" y="20" width="100" height="30"/>
       <text class="lbl" x="90" y="40" text-anchor="middle">client</text>
@@ -1262,15 +1756,15 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .h { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
-        .r { fill: #1f4e7a; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
-        .lblw { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #f4f1ea; }
-        .arr { stroke: #c9722c; stroke-width: 1.4; fill: none; marker-end: url(#arn); }
-        .pkt { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #c9722c; }
+        .h { fill: #eef3fb; stroke: var(--accent); stroke-width: 1.5; }
+        .r { fill: var(--accent); }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0b1220; }
+        .lblw { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #ffffff; }
+        .arr { stroke: #f97316; stroke-width: 1.4; fill: none; marker-end: url(#arn); }
+        .pkt { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #f97316; }
       </style>
       <defs>
-        <marker id="arn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker>
+        <marker id="arn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker>
       </defs>
       <rect class="h" x="20" y="80" width="80" height="35"/>
       <text class="lbl" x="60" y="100" text-anchor="middle">Alice</text>
@@ -1341,9 +1835,9 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .l { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
-        .l2 { fill: #ddd5be; stroke: #1f4e7a; stroke-width: 1.5; }
-        .ll { font-family: 'JetBrains Mono', monospace; font-size: 12px; fill: #0d1117; font-weight: 600; }
+        .l { fill: #eef3fb; stroke: var(--accent); stroke-width: 1.5; }
+        .l2 { fill: #e5ecf8; stroke: var(--accent); stroke-width: 1.5; }
+        .ll { font-family: 'JetBrains Mono', monospace; font-size: 12px; fill: #0b1220; font-weight: 600; }
         .lt { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #6b7280; }
       </style>
       <rect class="l" x="180" y="20" width="240" height="32"/>
@@ -1485,9 +1979,36 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <p>~40 servers in a vertical rack. <strong>Top-of-Rack (ToR) switch</strong> connects them. Then ToRs connect to higher-level switches. Then those to higher levels. Tree structure.</p>
 
   <h2>Bisection bandwidth</h2>
-  <p>Cut network in half. Total bandwidth across the cut = bisection bandwidth. <strong>Full bisection</strong> = any server can talk to any other at full speed.</p>
+  <p>Cut network in half. Total bandwidth across the cut = <strong>bisection bandwidth</strong>. The "cut" is chosen as the worst-case (smallest BW) cut.</p>
+  <p><strong>Full bisection bandwidth</strong> = the value bisection bandwidth would have if no link were a bottleneck for any all-pairs traffic pattern. Equivalently, with N hosts each at link rate R:</p>
   <div class="math-block">
-    \[ \text{full bisection} \iff \forall \text{ traffic patterns, no oversubscription} \]
+    \[ \text{full bisection BW} \;=\; \frac{N \cdot R}{2} \]
+  </div>
+  <p>(Half the hosts can simultaneously talk to the other half at full rate.)</p>
+
+  <h3>Oversubscription ratio</h3>
+  <div class="math-block">
+    \[ \text{oversubscription} \;=\; \frac{\text{bisection BW}}{\text{full bisection BW}} \]
+  </div>
+  <p>"Full bisection" → ratio = 1. Half that → ratio = 0.5 (also called <strong>2:1 oversubscribed</strong>). The lower the ratio, the more cheaped-out the network is.</p>
+
+  <h3>Worked example</h3>
+  <p>8 hosts, each connected at 20 Gbps to a ToR. Full bisection BW = 8 × 20 / 2 = 80 Gbps. Now suppose the worst-case cut crosses 2 links of 20 Gbps each → bisection BW = 40 Gbps. Oversubscription ratio = 40/80 = 0.5.</p>
+  <div class="callout">
+    <strong>Test pattern.</strong> Given a topology, find the worst cut (the cut crossing the fewest/smallest links). Sum capacities crossing it = bisection BW. Compute full = N·R/2. Ratio = bisection / full.
+  </div>
+
+  <h2>Fat-tree vs Clos — a real distinction</h2>
+  <table>
+    <tr><th>Aspect</th><th>(Original) Fat-tree</th><th>Clos / k-ary fat-tree</th></tr>
+    <tr><td>Link bandwidths</td><td>Thicker (faster) higher up</td><td>Uniform — all links same rate</td></tr>
+    <tr><td>Switches</td><td>Bigger / more expensive higher up</td><td>All commodity switches</td></tr>
+    <tr><td>Multiple paths between hosts?</td><td>Yes</td><td>Yes (multiple cores)</td></tr>
+    <tr><td>Single point of failure?</td><td>Yes if a single fat link dies</td><td>No — many redundant paths</td></tr>
+    <tr><td>Bisection BW</td><td>Can be full</td><td>Can be full</td></tr>
+  </table>
+  <div class="callout">
+    <strong>Test pattern.</strong> "Advantages of Fat-tree Clos vs Fat-tree?" → (a) lower per-link BW, (c) avoids single point of failure, (d) commodity switches. NOT (b) higher bisection — both can hit full bisection.
   </div>
 
   <h2>Clos topology / Fat-tree</h2>
@@ -1496,13 +2017,13 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .core { fill: #1f4e7a; }
-        .agg { fill: #2d5a7a; }
-        .tor { fill: #4a6b3a; }
-        .srv { fill: #c9722c; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #f4f1ea; }
+        .core { fill: var(--accent); }
+        .agg { fill: #1d4ed8; }
+        .tor { fill: #1a7f4a; }
+        .srv { fill: #f97316; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #ffffff; }
         .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #6b7280; }
-        .l { stroke: #b8a87a; stroke-width: 1; }
+        .l { stroke: rgba(17,26,46,.22); stroke-width: 1; }
       </style>
       <!-- Core -->
       <rect class="core" x="240" y="10" width="40" height="22" rx="3"/>
@@ -1532,7 +2053,7 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
       <text class="lbl" x="460" y="145" text-anchor="middle">ToR</text>
       <text class="lbl" x="530" y="145" text-anchor="middle">ToR</text>
       <!-- Servers -->
-      <g fill="#c9722c">
+      <g fill="#f97316">
         <rect x="50" y="180" width="12" height="20"/><rect x="65" y="180" width="12" height="20"/><rect x="80" y="180" width="12" height="20"/>
         <rect x="120" y="180" width="12" height="20"/><rect x="135" y="180" width="12" height="20"/><rect x="150" y="180" width="12" height="20"/>
         <rect x="190" y="180" width="12" height="20"/><rect x="205" y="180" width="12" height="20"/><rect x="220" y="180" width="12" height="20"/>
@@ -1622,12 +2143,71 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   </div>
   <p>Same flow → same hash → same path → no reordering. Different flows → different paths → load balanced.</p>
 
+  <div class="callout">
+    <strong>Single TCP flow can't be split by vanilla ECMP</strong> because all its packets share the same 5-tuple → same hash → same path. To split, you need to vary something. Options: change the IPv6 flow label per packet, or add a dedicated path-ID header that the hash includes.
+  </div>
+
+  <h3>Splitting a single flow — and why it's hard</h3>
+  <ul>
+    <li>If you tag packets in one flow with different path IDs, packets take different paths.</li>
+    <li>Different paths have different delays → packets arrive <strong>out of order</strong> at receiver.</li>
+    <li>TCP performs poorly when packets arrive out of order (triggers fast retransmit, etc.).</li>
+    <li>So splitting one TCP flow across paths is rarely done naively.</li>
+  </ul>
+
+  <h3>How to tag packets with a path ID</h3>
+  <table>
+    <tr><th>Header field</th><th>Works?</th></tr>
+    <tr><td>IPv6 <strong>flow label</strong> (20 bits)</td><td>YES — can vary per packet without breaking anything</td></tr>
+    <tr><td>IPv4 protocol / IPv6 next-header</td><td>NO — has to say "TCP"</td></tr>
+    <tr><td>TCP source port</td><td>NO — must stay constant within a flow</td></tr>
+    <tr><td>Add a new tunnel header with a path-ID</td><td>YES — explicit; needs ECMP modified to include it</td></tr>
+  </table>
+
+  <h3>ECMP placement math</h3>
+  <p>If 3 flows all start at hosts H1, H2, H3 and all destined to H8, and ECMP places them optimally, but two ToRs share an uplink that's the bottleneck → all 3 flows fair-share that 20 Gbps link → each ≈ 20/3 Gbps. <strong>Worst-case placement doesn't make this worse</strong> when collisions are unavoidable due to topology — flow rates are the same.</p>
+
+  <h3>Mitigating ECMP collisions</h3>
+  <ul>
+    <li><strong>Change flow label</strong> (or other hashed field) → forces a new hash → new path. Best non-disruptive fix.</li>
+    <li><strong>Flowlet switching</strong>: split flow at idle gaps (where reordering won't matter) and rehash.</li>
+    <li>Don't: stop the flow / change source IP — disruptive, loses connection.</li>
+  </ul>
+
   <h2>Problem: hash collisions</h2>
   <p>Two big elephants might hash to same path → that path becomes congested even though others are idle.</p>
   <p>Fix: <strong>flowlet switching</strong> — split a flow at gaps in transmission, rebalance per flowlet (still avoids most reordering).</p>
 
   <h2>Why not BGP-style?</h2>
   <p>DCs use IGP-like protocols (OSPF, IS-IS) or custom variants. Sometimes <strong>BGP</strong> is even used internally because it scales well and supports policy. But basics are similar to what you saw earlier.</p>
+
+  <h2>WAN traffic engineering</h2>
+  <p>Different setting: not DC fat-tree, but a global WAN connecting datacenters across continents. Few well-known links, all owned by one operator. Goal: route traffic to use links efficiently (avoid congestion).</p>
+
+  <h3>Least-cost routing (default)</h3>
+  <p>Just shortest path. Ignores capacity and current load. Can dump multiple workloads on the same shortest-path link → congestion.</p>
+
+  <h3>Least-cost-with-capacity</h3>
+  <p>Pick shortest path that fits the workload's bandwidth need on every link along it. If the cheapest path is full, use the next-best path that has capacity. Workloads are usually NOT split across multiple paths (would cause reordering); each workload is given one full path.</p>
+
+  <h3>Implementing TE: where to add the TE header</h3>
+  <p>To override default routing for a workload, add a TE header that routers along the path use to forward.</p>
+  <table>
+    <tr><th>Where to add the header</th><th>OK?</th></tr>
+    <tr><td>In source host</td><td>Pushes complexity onto every host. Avoid.</td></tr>
+    <tr><td>In a DC switch in the source DC</td><td>Better, but every internal DC switch needs TE awareness.</td></tr>
+    <tr><td><strong>In the WAN router connecting source DC to other DCs</strong></td><td><strong>Best — latest moment before crossing into TE'd part of network.</strong></td></tr>
+    <tr><td>On the way to next DC (mid-flight)</td><td>Too late — can't influence the first hop.</td></tr>
+  </table>
+
+  <h3>TE doesn't natively know about latency</h3>
+  <p>Standard capacity-aware TE picks <em>any</em> path that fits. A latency-sensitive workload (e.g. streaming) gets the same treatment as a throughput workload — could be placed on a longer-cost path with capacity. To support that, TE needs latency as an additional input/constraint.</p>
+
+  <h3>Splitting traffic across paths</h3>
+  <ul>
+    <li><strong>Per-packet round-robin</strong> across paths → reordering at receiver. Bad for TCP.</li>
+    <li><strong>Per-flow split</strong> (hash flows to paths) → packets in one flow stay on one path. No reordering. Used in practice (this is just ECMP at the WAN level).</li>
+  </ul>
 </section>
 
 <!-- ═════════ §13 DC ADDR ═════════ -->
@@ -1659,9 +2239,9 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 100" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .h { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1; }
-        .h2 { fill: #ddd5be; stroke: #1f4e7a; stroke-width: 1; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
+        .h { fill: #eef3fb; stroke: var(--accent); stroke-width: 1; }
+        .h2 { fill: #e5ecf8; stroke: var(--accent); stroke-width: 1; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0b1220; }
       </style>
       <rect class="h" x="20" y="30" width="120" height="40"/>
       <text class="lbl" x="80" y="48" text-anchor="middle">outer L3</text>
@@ -1734,11 +2314,11 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .ctrl { fill: #1f4e7a; }
-        .sw { fill: #4a6b3a; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #f4f1ea; }
+        .ctrl { fill: var(--accent); }
+        .sw { fill: #1a7f4a; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #ffffff; }
         .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #6b7280; }
-        .l { stroke: #c9722c; stroke-width: 1.5; stroke-dasharray: 4 3; }
+        .l { stroke: #f97316; stroke-width: 1.5; stroke-dasharray: 4 3; }
       </style>
       <rect class="ctrl" x="240" y="20" width="120" height="40" rx="5"/>
       <text class="lbl" x="300" y="40" text-anchor="middle">Controller</text>
@@ -1812,8 +2392,72 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <h2>RDMA — Remote DMA</h2>
   <p>Direct memory access from one machine's RAM to another's, with no CPU involvement on the target. Used heavily in HPC and AI training (Infiniband, RoCE).</p>
 
+  <h3>WQE / CQE — the queue model</h3>
+  <p>RDMA is fundamentally queue-based. App-NIC and NIC-OS communication go through queues, NOT immediate processing.</p>
+  <ul>
+    <li><strong>WQE</strong> (Work Queue Element): app posts a job (e.g. "read from remote address X into local buffer Y") onto a Send Queue. NIC processes WQEs <em>when it's ready</em> — there's no "stop what you're doing" semantics.</li>
+    <li><strong>CQE</strong> (Completion Queue Element): when NIC finishes a WQE, it places a CQE on the Completion Queue. OS / app polls the CQ when convenient. <em>OS does NOT have to drop everything to handle it.</em></li>
+    <li>The whole point: decouple post and complete from each other and from CPU. Async by design.</li>
+  </ul>
+  <div class="callout">
+    <strong>Test trap.</strong> "WQE created → NIC must process immediately?" FALSE. "CQE created → OS must process immediately?" FALSE. Queues exist precisely so this isn't required.
+  </div>
+
   <h2>SmartNICs / DPUs</h2>
   <p>NIC contains its own programmable CPU/FPGA. Offload work: encryption, virtualization, encapsulation, compression. Examples: NVIDIA BlueField, AWS Nitro, Intel IPU.</p>
+
+  <h3>What gets offloaded</h3>
+  <ul>
+    <li><strong>Checksum verification</strong> — done in hardware</li>
+    <li><strong>Segmentation / fragmentation</strong> (TSO, LRO) — done in hardware</li>
+    <li><strong>Encryption</strong> — TLS in hardware</li>
+    <li><strong>Encapsulation / decapsulation</strong> — VXLAN done in hardware</li>
+  </ul>
+  <div class="callout">
+    <strong>Why offload?</strong> For <strong>performance</strong>, NOT correctness. Software did the same operations correctly — hardware just does them faster.
+  </div>
+
+  <h2>BDP and queueing intuition</h2>
+  <p><strong>BDP = Bandwidth × RTT</strong>. The amount of data needed in flight to fully utilize a link.</p>
+  <ul>
+    <li>Single sender, empty queue: as data arrives at link rate, it leaves at link rate. Queue stays empty.</li>
+    <li>So a lone sender's first BDP can NOT fill any queue at all.</li>
+    <li>For a queue to grow, multiple senders / aggregate input rate must exceed link rate.</li>
+  </ul>
+  <p>Therefore: ECN with threshold = ½ BDP, single sender → cannot trigger marking until aggregate input exceeds output. Loss-based CC requires queue overflow → fills the buffer first → bad for tail latency.</p>
+
+  <h2>Rate enforcement: CC vs QoS</h2>
+  <table>
+    <tr><th>Mechanism</th><th>What it does</th><th>Hard limits?</th></tr>
+    <tr><td>Congestion control</td><td>Reactive — reduces send rate when it sees congestion signals</td><td>NO — can blast at line rate when network is empty</td></tr>
+    <tr><td>QoS / priority queues</td><td>Switch keeps separate queues per class; serves high priority first</td><td>Provides relative guarantees (e.g. flow always gets ≥ 1/4 link)</td></tr>
+    <tr><td>Rate limiter / pacing</td><td>Shapes outgoing traffic to never exceed a rate</td><td>YES — strict rate cap on the host side</td></tr>
+  </table>
+  <div class="callout">
+    <strong>Test trap.</strong> "Can CC enforce a 5 Gbps cap?" NO — CC backs off only when there's competing traffic. To enforce hard caps you need a pacer/rate-limiter. To guarantee a minimum share (e.g. 1/4 link) you need QoS / priorities.
+  </div>
+
+  <h2>Timing wheels — pacing implementation</h2>
+  <p>Data structure for scheduling outgoing packets at exact times. Used to pace TCP / RDMA flows at fixed rates.</p>
+  <ul>
+    <li><strong>Granularity</strong> g = time per bucket (e.g. 10 µs).</li>
+    <li><strong>Horizon</strong> H = total time covered (e.g. 5 s) → number of buckets = H/g.</li>
+    <li><strong>now pointer</strong> advances through buckets. Bucket the pointer is on → emit those packets now.</li>
+    <li>Packet's bucket = round( (sendtime − now_time) / g ).</li>
+  </ul>
+
+  <h3>Worked example</h3>
+  <p>Class A: rate 1 Gbps with 1500-byte packets ⇒ 12 µs between packets. Last sent t = 10 µs, so next packet's send time = 22 µs → bucket = (22−15)/10 ≈ bucket "+1" from now=15µs.</p>
+  <p>Class B: 0.8 Gbps ⇒ 15 µs interval. Last sent t = 6 µs → next = 21 µs.</p>
+  <p>So B (timestamp 21) goes before A (timestamp 22).</p>
+
+  <h3>Rate bounds</h3>
+  <ul>
+    <li><strong>Max rate per class</strong> = 1 packet per bucket × pkt_size / granularity.<br/>
+      e.g. 1500 B / 10 µs = 1.2 Gbps.</li>
+    <li><strong>Min rate per class</strong> = 1 packet per horizon × pkt_size / horizon.<br/>
+      e.g. 1500 B / 5 s.</li>
+  </ul>
 
   <h2>P4 — programmable data plane</h2>
   <p>Language for describing packet processing in switches. Compile to ASIC. Lets you customize the data plane, not just the control plane.</p>
@@ -1882,14 +2526,14 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .src { fill: #c9722c; }
-        .r { fill: #1f4e7a; }
-        .h { fill: #4a6b3a; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #f4f1ea; }
-        .l { stroke: #b8a87a; stroke-width: 1.5; }
-        .pkt { stroke: #c9722c; stroke-width: 2; fill: none; marker-end: url(#mc-arr); }
+        .src { fill: #f97316; }
+        .r { fill: var(--accent); }
+        .h { fill: #1a7f4a; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #ffffff; }
+        .l { stroke: rgba(17,26,46,.22); stroke-width: 1.5; }
+        .pkt { stroke: #f97316; stroke-width: 2; fill: none; marker-end: url(#mc-arr); }
       </style>
-      <defs><marker id="mc-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker></defs>
+      <defs><marker id="mc-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker></defs>
       <rect class="src" x="20" y="80" width="60" height="30" rx="3"/>
       <text class="lbl" x="50" y="100" text-anchor="middle">sender</text>
       <circle class="r" cx="180" cy="95" r="20"/>
@@ -2128,11 +2772,11 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .n { fill: #1f4e7a; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #f4f1ea; }
-        .arr { stroke: #c9722c; stroke-width: 2; fill: none; marker-end: url(#ring-arr); }
+        .n { fill: var(--accent); }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #ffffff; }
+        .arr { stroke: #f97316; stroke-width: 2; fill: none; marker-end: url(#ring-arr); }
       </style>
-      <defs><marker id="ring-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker></defs>
+      <defs><marker id="ring-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker></defs>
       <circle class="n" cx="300" cy="40" r="22"/><text class="lbl" x="300" y="45" text-anchor="middle">G0</text>
       <circle class="n" cx="430" cy="90" r="22"/><text class="lbl" x="430" y="95" text-anchor="middle">G1</text>
       <circle class="n" cx="430" cy="170" r="22"/><text class="lbl" x="430" y="175" text-anchor="middle">G2</text>
@@ -2196,10 +2840,10 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="diagram-wrap">
     <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
       <style>
-        .n { fill: #1f4e7a; }
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #f4f1ea; }
+        .n { fill: var(--accent); }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #ffffff; }
         .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #6b7280; }
-        .ring { fill: none; stroke: #c9722c; stroke-width: 1; stroke-dasharray: 4 3; opacity: .6; }
+        .ring { fill: none; stroke: #f97316; stroke-width: 1; stroke-dasharray: 4 3; opacity: .6; }
       </style>
       <circle class="ring" cx="100" cy="90" r="120"/>
       <circle class="ring" cx="500" cy="90" r="120"/>
@@ -2232,6 +2876,35 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
 
   <h2>Exposed terminal</h2>
   <p>Opposite problem: B is sending to A. C wants to send to D. C hears B → CSMA says don't transmit. But C→D wouldn't actually collide with B→A. C unnecessarily defers.</p>
+
+  <h2>MACA edge cases — what RTS/CTS does NOT solve</h2>
+  <ul>
+    <li><strong>Two simultaneous RTS to the same receiver</strong>: collision at the receiver, both RTS dropped. RTS/CTS doesn't help — they collide before any CTS happens. The receiver ignores both. Different from the hidden-terminal problem (which is sequential).</li>
+    <li><strong>After RTS/CTS exchange A↔B</strong>: A can send data to B. B should NOT also send data to A simultaneously — they'd clobber each other. RTS/CTS does NOT mean both sides can transmit data at once. Each direction needs its own RTS/CTS.</li>
+    <li><strong>"Everyone in MY range must be quiet" is not enough</strong> — what matters is everyone in the <em>receiver's</em> range. CTS is the one that tells the receiver's neighbors to stay quiet, not RTS. Sender's CTS doesn't help if a hidden device near the receiver is the source of the interference.</li>
+  </ul>
+
+  <h2>Contention window (CW) and backoff</h2>
+  <p>If your RTS doesn't get a CTS back, you back off — wait a random time in [0, CW] before retrying. CW changes based on outcomes:</p>
+  <table>
+    <tr><th>Outcome</th><th>Action on CW</th></tr>
+    <tr><td>RTS/CTS exchange fails (no CTS)</td><td>CW = min(2·CW, CW_max) — exponentially back off</td></tr>
+    <tr><td>RTS/CTS succeeds</td><td>CW = CW_0 (reset)</td></tr>
+  </table>
+  <p>Standard binary exponential backoff. Failure → suspect channel is busy → wait longer.</p>
+
+  <h3>Fairness analysis</h3>
+  <table>
+    <tr><th>Reset rule on success</th><th>Fair?</th></tr>
+    <tr><td><strong>CW = CW_0 (full reset)</strong></td><td><strong>Fair</strong> — every successful station starts from same baseline. No station accumulates an advantage.</td></tr>
+    <tr><td>CW = CW − 1 (decrement only)</td><td><strong>Unfair</strong> — a station that's been winning has a smaller CW than a station that's been losing → it backs off less → it wins more → unfair feedback loop.</td></tr>
+  </table>
+  <div class="callout">
+    <strong>Test pattern.</strong> Any backoff scheme where successful stations end up with smaller CW than unsuccessful ones is unfair. Reset-to-baseline is the fair choice.
+  </div>
+
+  <h3>What if the data packet is dropped (CTS arrived but data lost)?</h3>
+  <p>Pure MACA has no ACK, so the sender doesn't know. MACAW adds an ACK. If ACK doesn't arrive after a successful RTS/CTS, you treat it as a soft failure — backoff variant: keep CW at current value (don't reset, don't double).</p>
 </section>
 
 <!-- ═════════ §26 CELLULAR ═════════ -->
@@ -2239,27 +2912,116 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   <div class="section-header">
     <div class="section-num">§ 26 · Wireless</div>
     <h1>Cellular</h1>
-    <div class="lede">Phone networks. Coordinated, infrastructure-based. Different from WiFi.</div>
+    <div class="lede">Phone networks. Coordinated. 5-step lifecycle. Different from WiFi.</div>
   </div>
 
   <div class="tldr">
     <div class="label">TL;DR</div>
-    Geography divided into <strong>cells</strong>, each served by a base station. Phones authenticate via <strong>SIM</strong>. Coordinated allocation (no random access between phones — base station schedules everything). <strong>Handoff</strong> when you move between cells. Generations: 2G, 3G, 4G/LTE, 5G.
+    5 steps: <strong>Registration</strong> (sign up, get SIM with IMSI) → <strong>Discovery</strong> (scan towers, hear beacon) → <strong>Attachment</strong> (auth with shared key, get IP, MM sets up tunnels) → <strong>Data Exchange</strong> (use the network) → <strong>Handover</strong> (network reassigns tunnel when you move). Top design goal: <strong>mobility</strong>.
   </div>
+
+  <h2>Top design goal: mobility</h2>
+  <p>Not reliability, not security — <strong>mobility</strong>. The whole architecture exists so you can move and stay connected without breaking ongoing TCP connections.</p>
 
   <h2>Architecture</h2>
   <ul>
-    <li><strong>UE</strong> (user equipment) = your phone</li>
-    <li><strong>Base station</strong> = cell tower (eNodeB / gNodeB)</li>
-    <li><strong>Core network</strong> = carrier's backend (auth, billing, gateway to Internet)</li>
+    <li><strong>UE</strong> (user equipment) = your phone, with SIM card.</li>
+    <li><strong>Base station / Tower</strong> = eNodeB (4G) / gNodeB (5G). Radio link to UE.</li>
+    <li><strong>Radio Gateway</strong> = first router into the cellular core. One side of the radio-side tunnel.</li>
+    <li><strong>Packet Gateway</strong> = exit to Internet. Other side of the data tunnel.</li>
+    <li><strong>Mobility Manager (MM)</strong> = the brains. Authenticates UEs, assigns IPs, configures tunnels, handles handover. Talks to a <strong>DB</strong> with all subscribers' shared keys (indexed by IMSI).</li>
   </ul>
+
+  <h2>Two crucial IDs</h2>
+  <table>
+    <tr><th>ID</th><th>What</th><th>Where it lives</th></tr>
+    <tr><td><strong>IMEI</strong></td><td>Device ID. Burned into hardware. Globally unique — two devices can't share an IMEI.</td><td>The phone (hardware).</td></tr>
+    <tr><td><strong>IMSI</strong></td><td>Subscriber ID. Tied to the SIM, which is tied to your account.</td><td>The SIM card.</td></tr>
+  </table>
+  <p>IMSI ≠ IMEI. Swap SIM into a new phone → same IMSI, different IMEI.</p>
+
+  <h2>The 5 steps</h2>
+
+  <h3>Step 0 — Registration (one-time, in person/online)</h3>
+  <ul>
+    <li>You sign up with carrier (AT&amp;T etc.).</li>
+    <li>Carrier issues a SIM card with an <strong>IMSI</strong> burned in.</li>
+    <li>Carrier stores in DB: IMSI ↔ shared cryptographic key. (You have the same key on the SIM.)</li>
+    <li>This is the only step you do as a human. Everything below happens automatically when phone turns on.</li>
+  </ul>
+
+  <h3>Step 1 — Discovery</h3>
+  <ul>
+    <li>Phone scans for nearby towers (multiple frequencies).</li>
+    <li>Towers continuously broadcast <strong>beacons</strong> identifying carrier + channel info.</li>
+    <li>Phone picks tower with strongest signal (signal weakens with distance → typically closer).</li>
+    <li>Phone learns from beacon: the channel to use to talk to this tower.</li>
+    <li>No connection initiated yet — phone just listens.</li>
+  </ul>
+
+  <h3>Step 2 — Attachment</h3>
+  <ul>
+    <li>Phone sends <strong>attach request</strong> over the tower's channel, presenting its IMSI.</li>
+    <li>Tower forwards to <strong>Mobility Manager</strong>.</li>
+    <li>MM looks up IMSI in DB → gets shared key.</li>
+    <li>MM challenges phone with shared-key crypto. Phone responds correctly only if it really has the SIM.</li>
+    <li>If auth passes, MM:
+      <ul>
+        <li>Assigns the phone an IP address.</li>
+        <li>Configures TWO tunnels: <strong>Tower → Radio GW</strong> AND <strong>Radio GW → Packet GW</strong>. (Two tunnels, not one.)</li>
+      </ul>
+    </li>
+    <li>If auth fails (e.g. attacker stole only the IMSI but lacks the key) → MM rejects here. <strong>Attachment is where forged-IMSI attacks die.</strong></li>
+  </ul>
+  <div class="callout">
+    <strong>Test trap.</strong> "Stolen-IMSI attacker detected at which step?" Discovery is just listening to beacons → no detection. Attachment is when the attacker actually presents the IMSI and must prove ownership → detected here.
+  </div>
+
+  <h3>Step 3 — Data Exchange</h3>
+  <ul>
+    <li>Phone sends IP packets through the tunnel.</li>
+    <li>Tower → encapsulates in tunnel header → Radio GW → Packet GW → strips tunnel header → Internet.</li>
+    <li>Replies traverse in reverse.</li>
+    <li>From the Internet's view, your phone has a stable, normal IP.</li>
+  </ul>
+
+  <h3>Step 4 — Handover</h3>
+  <ul>
+    <li>Phone moves out of Tower 1's good range, into Tower 2's.</li>
+    <li>Phone reports signal measurements.</li>
+    <li><strong>The NETWORK chooses the next tower</strong>, not the phone. (Phone observes; network decides.)</li>
+    <li>MM tells routers in the cellular core: <strong>delete</strong> the existing tunnel path through Tower 1, <strong>install</strong> a new tunnel path through Tower 2.</li>
+    <li>UE's IP doesn't change. TCP connections survive.</li>
+  </ul>
+  <div class="callout">
+    <strong>Test trap.</strong> "Phone listens for nearby towers and PHONE picks the next tower" → that's Discovery (initial connect), NOT Handover. During Handover the network picks. So if a question asks "at which step does the phone pick the tower" and clearly describes already-connected user moving around → answer is "None of the above" because in handover the network picks.
+  </div>
+
+  <h2>Handover sequence diagram (typical)</h2>
+  <p>Roles in the typical 5-column diagram:</p>
+  <table>
+    <tr><th>Column (left to right)</th><th>Entity</th></tr>
+    <tr><td>(a)</td><td>UE / phone</td></tr>
+    <tr><td>(b)</td><td>Old base station (Tower 1)</td></tr>
+    <tr><td>(c)</td><td>New base station (Tower 2)</td></tr>
+    <tr><td>(d)</td><td>Mobility Manager</td></tr>
+    <tr><td>(e)</td><td>Radio GW / Packet GW</td></tr>
+  </table>
+  <p>(Exact ordering varies; the typical pattern is UE-to-old reports → old-to-MM → MM-to-new → MM-to-gateways.)</p>
+
+  <h2>Roaming</h2>
+  <p>You're an AT&amp;T customer in a Verizon-only area. AT&amp;T has roaming agreement with Verizon.</p>
+  <ul>
+    <li>Phone discovers Verizon tower.</li>
+    <li>Verizon's MM doesn't have your IMSI in its DB. It contacts AT&amp;T's DB to fetch your auth info / verify (or proxies auth back to AT&amp;T).</li>
+    <li>Verizon's MM sets up tunnels in Verizon's core for you.</li>
+    <li>If you had an active TCP connection on a different network and the IP changes, that connection breaks. (The point of cellular's stable IP is within ONE carrier; cross-carrier roaming may force a new IP.)</li>
+  </ul>
+  <p>Common multi-select answer: roaming user gets authed by foreign carrier (Verizon) using your home carrier's DB info, foreign carrier sets up tunnels in its own core. AT&amp;T does NOT directly send "handover" to Verizon — it's a re-attach on Verizon.</p>
 
   <h2>Why not WiFi-style?</h2>
   <p>Cellular is <strong>coordinated</strong>. Base station schedules every uplink/downlink slot for every phone. No CSMA/CA chaos. Better efficiency at scale.</p>
   <p>Uses combinations of FDM, TDM, CDMA (older), OFDMA (LTE/5G).</p>
-
-  <h2>Handoff (handover)</h2>
-  <p>You move out of cell A's range into cell B's. Phone reports signal strength. Network coordinates: your connection is migrated from A to B. Done in milliseconds. TCP doesn't notice.</p>
 
   <h2>Generations</h2>
   <table>
@@ -2270,15 +3032,15 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
     <tr><td>5G</td><td>2020s</td><td>mmWave, ultra-low latency, network slicing</td></tr>
   </table>
 
-  <h2>Mobility / IP</h2>
-  <p>Your phone gets an IP from the carrier. As you move, the carrier keeps your IP stable by routing through their core. From the Internet's perspective, you have a normal IP address. Tunneling (GTP) handles the location change underneath.</p>
-
   <h2>5G features</h2>
   <ul>
     <li><strong>mmWave</strong> — high frequency, huge bandwidth, but short range and blocked by walls</li>
     <li><strong>Network slicing</strong> — virtual networks for different use cases (low latency for cars, high bandwidth for video)</li>
     <li><strong>Edge computing</strong> — push compute closer to towers</li>
   </ul>
+
+  <h2>Why no DV in cellular core?</h2>
+  <p>Cellular core routers don't run distance-vector or other dynamic routing for user packets. The MM <em>configures</em> tunnels (basically static routes) through the core. That's why UE handover works fast and predictably.</p>
 </section>
 
 
@@ -2395,22 +3157,1276 @@ Date: Sat, 16 Mar 2024 18:33:08 GMT
   </table>
 </section>
 
-</main>
-</div><!-- /app -->
+<!-- ═════════ TCP RECAP ═════════ -->
+<section class="sec" id="tcp-recap">
+  <div class="section-header">
+    <div class="num">§ T · Reference</div>
+    <h1>TCP Recap</h1>
+    <p class="lede">First half of 168 stuff that the final still tests. Drilled.</p>
+  </div>
 
+  <div class="tldr">
+    <strong>TL;DR.</strong> TCP gives reliable, in-order, congestion-controlled bytestream over IP. State machine: <strong>Slow Start → Congestion Avoidance → Fast Recovery</strong> (or Slow Start on timeout). Two windows: <strong>CWND</strong> (you set, based on net congestion) and <strong>RWND</strong> (other side reports, based on their buffer space). Throughput ≈ MSS / (RTT · √p).
+  </div>
+
+  <h2>Connection lifecycle</h2>
+  <h3>Handshake (open)</h3>
+  <p>3-way: SYN → SYN-ACK → ACK. Both sides agree on initial sequence numbers. CWND starts at 1.</p>
+
+  <h3>Teardown (close)</h3>
+  <p>Each direction closed independently. Either side can initiate. <strong>BOTH sides must send a FIN.</strong></p>
+  <ul>
+    <li><strong>Active close</strong>: you send the first FIN.</li>
+    <li><strong>Passive close</strong>: other side sends FIN first; you eventually send your own FIN when done sending data.</li>
+  </ul>
+  <div class="callout">
+    <strong>Gotcha.</strong> "Passive close doesn't require sending a FIN" is FALSE. You always send one — just second.
+  </div>
+
+  <h2>TCP flags</h2>
+  <table>
+    <tr><th>Flag</th><th>Meaning</th></tr>
+    <tr><td>SYN</td><td>Open connection. Only on first packet of handshake.</td></tr>
+    <tr><td>ACK</td><td>This packet acks data. <strong>Set on ALL packets except initial SYN.</strong></td></tr>
+    <tr><td>FIN</td><td>I'm done sending. Other side still might send.</td></tr>
+    <tr><td>RST</td><td>Abort. No graceful close.</td></tr>
+    <tr><td>PSH</td><td>Push to app immediately. Don't buffer.</td></tr>
+  </table>
+  <div class="callout">
+    <strong>ACK flag ≠ pure ack packet.</strong> A packet can have ACK flag set AND carry payload. Common: piggyback ack on data going the other way.
+  </div>
+
+  <h2>Two windows: CWND vs RWND</h2>
+  <table>
+    <tr><th>Window</th><th>Set by</th><th>Limits</th></tr>
+    <tr><td><strong>CWND</strong> (Congestion Window)</td><td>You (sender)</td><td>How much you'll have in flight (network's capacity)</td></tr>
+    <tr><td><strong>RWND</strong> (Receive Window)</td><td>Other side reports it to you</td><td>How much they can buffer (their RAM)</td></tr>
+  </table>
+  <p>You send min(CWND, RWND) at a time.</p>
+
+  <h3>RWND semantics — direction matters</h3>
+  <p>Easy to confuse. Two scenarios:</p>
+  <ul>
+    <li><strong>Set YOUR RWND too large</strong> (in project: <code>snd.wnd</code>): you ignore what other side reports → you send too much → <em>other side</em> runs out of buffer.</li>
+    <li><strong>REPORT a too-large RWND to other side</strong>: you tell them they can blast you → they will → <em>you</em> run out of buffer.</li>
+  </ul>
+  <div class="callout">
+    <strong>Rule.</strong> The RWND value YOU report constrains how much data the OTHER side sends. Your RWND value (snd.wnd) constrains how much YOU send.
+  </div>
+
+  <h2>The CC state machine</h2>
+  <p>Three modes. Each ack changes CWND. Triggers move between modes.</p>
+  <table>
+    <tr><th>Mode</th><th>On new ack</th><th>Exit on</th></tr>
+    <tr><td>Slow Start</td><td>CWND += 1 (doubles per RTT)</td><td>CWND &gt; SSTHRESH → Congestion Avoidance</td></tr>
+    <tr><td>Congestion Avoidance</td><td>CWND += 1/CWND (linear, +1 per RTT)</td><td>3 dup acks → Fast Recovery; timeout → Slow Start</td></tr>
+    <tr><td>Fast Recovery</td><td>Each more dup ack: CWND += 1 (inflate)</td><td>New ack → CA with CWND = SSTHRESH</td></tr>
+  </table>
+
+  <h3>On 3 duplicate acks</h3>
+  <ol>
+    <li>SSTHRESH ← CWND / 2</li>
+    <li>CWND ← CWND/2 + 3 (the "+3" credits the 3 duplicate acks — fast recovery inflation)</li>
+    <li>Retransmit the missing packet (fast retransmit)</li>
+    <li>Enter Fast Recovery</li>
+    <li>Each <em>additional</em> dup ack while in FR: CWND += 1 (inflate further — those acks mean packets left the network)</li>
+  </ol>
+
+  <h3>On new (non-dup) ack while in Fast Recovery</h3>
+  <ul>
+    <li>Deflate: CWND ← SSTHRESH (the new SSTHRESH set above)</li>
+    <li>Back to Congestion Avoidance</li>
+  </ul>
+  <div class="callout">
+    <strong>Test trap.</strong> "What ack lets you exit Fast Recovery?" → <strong>any new ack</strong>, i.e. an ack number greater than the one being repeated. Receiving the SAME dup ack again does NOT exit FR.
+  </div>
+
+  <h3>On timeout</h3>
+  <ul>
+    <li>SSTHRESH ← CWND / 2</li>
+    <li>CWND ← 1 (reset hard)</li>
+    <li>Retransmit first unacked packet</li>
+    <li>Back to Slow Start</li>
+  </ul>
+
+  <h2>Worked dynamics</h2>
+  <p><strong>Setup:</strong> CWND=12, SSTHRESH=16, in CA. Acks come for 61, 62, 63, 64, 65. Then loss of 66 → dup acks for 66.</p>
+  <ol>
+    <li>5 new acks → CWND = 12 + 5/12 ≈ 12.42 (each ack adds 1/12).</li>
+    <li>Dup acks don't change CWND.</li>
+    <li>3rd dup ack: SSTHRESH = 12.42/2 ≈ 6.21; CWND = 12.42/2 + 3 ≈ 9.21. Enter FR.</li>
+    <li>More dup acks → CWND inflates by 1 each.</li>
+    <li>New ack &gt; 66 arrives → CWND = SSTHRESH ≈ 6, back to CA.</li>
+  </ol>
+
+  <h2>Throughput equation</h2>
+  <div class="math-block">
+    \[ \text{throughput} \;\approx\; \frac{\text{MSS}}{\text{RTT} \cdot \sqrt{p}} \cdot k \]
+  </div>
+  <p>where MSS = max segment size, RTT = round-trip time, p = loss rate, k is a constant. Bigger MSS → faster. Bigger RTT → slower. More loss → slower (square root).</p>
+
+  <h3>Common ratio problem</h3>
+  <p>Two scenarios with same MSS, same p, only RTT differs. Ratio:</p>
+  <div class="math-block">
+    \[ \frac{S_2}{S_1} \;=\; \frac{1/\text{RTT}_2}{1/\text{RTT}_1} \;=\; \frac{\text{RTT}_1}{\text{RTT}_2} \]
+  </div>
+  <p>If RTT differs AND p differs, multiply: throughput ∝ 1 / (RTT · √p).</p>
+
+  <h2>AIMD vs AIAD</h2>
+  <table>
+    <tr><th>Scheme</th><th>Increase</th><th>Decrease</th><th>Fair?</th></tr>
+    <tr><td><strong>AIMD</strong> (TCP)</td><td>+1 per RTT</td><td>×½ on loss</td><td>Yes — converges to equal shares</td></tr>
+    <tr><td>AIAD</td><td>+α</td><td>−β</td><td>No — preserves initial unfairness</td></tr>
+    <tr><td>MIMD</td><td>×c on success</td><td>×½ on loss</td><td>No — preserves ratio</td></tr>
+    <tr><td>MIAD</td><td>×c</td><td>−β</td><td>No</td></tr>
+  </table>
+  <p>Multiplicative decrease is what creates fairness — bigger flows lose more on each loss event.</p>
+
+  <h2>UDP — the contrast</h2>
+  <ul>
+    <li>No handshake, no reliability, no ordering, no CC, no flow control.</li>
+    <li>Just src/dst port, length, checksum (optional in IPv4, mandatory in IPv6).</li>
+    <li>Does provide: <strong>mux/demux</strong> via ports — same as TCP.</li>
+    <li>Used for: DNS, DHCP, video, games, QUIC.</li>
+  </ul>
+
+  <h2>IP/IPv6 quick hits</h2>
+  <ul>
+    <li><strong>IPv6 fragmentation</strong>: routers NEVER fragment. Only the source can fragment, after PMTU discovery. (IPv4 routers can fragment.)</li>
+    <li><strong>IPv6 flow label</strong>: 20-bit field in IPv6 header. ECMP can hash on it. Different flow label → different path. Useful for forcing reroute on congestion without changing 5-tuple.</li>
+  </ul>
+
+  <h2>Traceroute</h2>
+  <p>Send packets with TTL = 1, 2, 3... Each hop decrements TTL; when TTL hits 0, that router drops it and sends back <strong>ICMP Time Exceeded</strong>. You learn each hop's IP. (ICMP, not IGP/IGMP/RCMP.)</p>
+
+  <h2>End-to-end principle</h2>
+  <p>Functions belong at the endpoints, not in the network. Network does best-effort delivery; reliability/ordering/encryption live at hosts.</p>
+  <div class="callout">
+    <strong>Caveat (the actual e2e principle).</strong> It's OK to put a function in the network if (a) hosts can't do it correctly OR (b) it's a performance optimization. Per-link wireless retransmits are fine (perf). ECN at switches is fine (hint). SDN computing routes is fine (it's control, not data-plane semantics).
+  </div>
+</section>
+
+<!-- ═════════ ROUTING RECAP ═════════ -->
+<section class="sec" id="routing-recap">
+  <div class="section-header">
+    <div class="num">§ R · Reference</div>
+    <h1>Routing Recap</h1>
+    <p class="lede">Link-state, distance-vector, the loop-prevention tricks. From the first half, still on the final.</p>
+  </div>
+
+  <div class="tldr">
+    <strong>TL;DR.</strong> Two routing styles. <strong>Link-state</strong>: flood your neighbors-and-costs to everyone, run Dijkstra locally. <strong>Distance-vector</strong>: tell neighbors your distances; iterate. DV has the count-to-infinity bug. Poisoned reverse + split horizon mostly fix it (but not 3+ node loops).
+  </div>
+
+  <h2>Link-state (LS)</h2>
+  <ul>
+    <li>Each router floods an LSA: "here are my neighbors and link costs."</li>
+    <li>Every router gets every LSA → builds full graph.</li>
+    <li>Run Dijkstra locally → forwarding table.</li>
+    <li>Examples: OSPF, IS-IS.</li>
+  </ul>
+
+  <h3>Stale LSA scenario</h3>
+  <p>If a link goes down but the LSA announcing this DOESN'T reach some router B, then B keeps using the old graph. Other routers use the new graph. Different routers can disagree → loops or suboptimal paths until B gets the update.</p>
+  <div class="callout">
+    <strong>Test pattern.</strong> "Link X-Y goes down; update reaches everyone except B; trace path D → F." Other routers route around the dead link; B routes through it as if it's still up. Path may go A→B (B sends through stale link area) → eventually correct routers detour.
+  </div>
+
+  <h2>Distance-vector (DV)</h2>
+  <ul>
+    <li>Each router maintains a vector: dest → (cost, next hop).</li>
+    <li>Periodically tells neighbors its vector.</li>
+    <li>On receive: for each dest, if (neighbor's cost + link cost) &lt; my cost, update.</li>
+    <li>Bellman-Ford in disguise.</li>
+    <li>Examples: RIP.</li>
+  </ul>
+
+  <h3>Count-to-infinity</h3>
+  <p>If a destination dies, DV updates can ping-pong forever, each round adding 1 to the cost. Bad news travels slowly.</p>
+
+  <h3>Split horizon</h3>
+  <p>In your full update to neighbor N, don't include destinations whose next hop is N. (Why tell N about routes through N?)</p>
+
+  <h3>Poisoned reverse</h3>
+  <p>Stronger: in updates to N, send "infinity" for routes whose next hop is N. (Actively tell N "don't use me to reach D.")</p>
+
+  <h3>What gets fixed</h3>
+  <table>
+    <tr><th>Topology</th><th>Poisoned reverse fixes count-to-infinity?</th></tr>
+    <tr><td>2 routers + dest (line)</td><td>Yes</td></tr>
+    <tr><td>3+ router loop / triangle</td><td>No — info can still flow around</td></tr>
+  </table>
+  <div class="callout">
+    <strong>Test pattern.</strong> "Which graphs still have count-to-infinity with poisoned reverse?" Answer: any graph with a cycle that doesn't pass through the destination — i.e. routers can still tell each other lies via the indirect path. Triangles (3-cycle) and bigger cycles → bad. Pure trees / 2-router lines → fine.
+  </div>
+
+  <h2>The "DV mystery" pattern</h2>
+  <p>Setup: A and B are direct neighbors (link cost 1). Both running DV with split horizon (full updates) + poisoned reverse (partial updates). Equilibrium reached. A's last full update to B about destination X declared distance d_A. B's distance to A in the same update is d_B. What's the range of d_B?</p>
+
+  <h3>The reasoning</h3>
+  <ul>
+    <li>If A says "distance d_A to X" in a full update to B, then A's next hop to X is NOT B (split horizon — would have been suppressed if it were).</li>
+    <li>B's distance to X is some d_B. B might route through A (then d_B = d_A + 1) or not (d_B = whatever via someone else).</li>
+    <li>A's true distance ≤ d_B + 1 (A could route through B if it had to).</li>
+    <li>Equilibrium: d_A and d_B are stable.</li>
+    <li>Range: d_B ∈ [d_A − 1, d_A + 1].</li>
+  </ul>
+  <p><strong>Worked:</strong> A says 4 to B. Then d_B ∈ {3, 4, 5}. Smallest = 3, largest = 5.</p>
+
+  <h2>BGP (briefly)</h2>
+  <ul>
+    <li>Path-vector: each route includes the full AS path traversed.</li>
+    <li>Used between ASes (Internet's inter-domain routing).</li>
+    <li>Policy-based, not least-cost.</li>
+    <li>Loop prevention: drop routes whose AS path includes you.</li>
+  </ul>
+
+  <h2>Routing comparison</h2>
+  <table>
+    <tr><th>Property</th><th>Link-state</th><th>Distance-vector</th><th>BGP (path-vector)</th></tr>
+    <tr><td>What's flooded</td><td>Local link state</td><td>Distance vector</td><td>AS paths</td></tr>
+    <tr><td>Convergence</td><td>Fast</td><td>Slow (count-to-∞)</td><td>Variable</td></tr>
+    <tr><td>State per router</td><td>O(graph)</td><td>O(neighbors × dests)</td><td>O(routes × paths)</td></tr>
+    <tr><td>Used in</td><td>OSPF, IS-IS</td><td>RIP</td><td>Inter-AS</td></tr>
+  </table>
+</section>
+
+</main>
 <footer>
   CS 168 · Internet Architecture · Spring 2026 · Applications → Wireless
 </footer>
+</div><!-- /app -->
 
 <script>
 /* ─── Section switching ─── */
 function show(id, link) {
-  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
-  document.getElementById(id).classList.add('on');
-  document.querySelectorAll('.sb-item').forEach(a => a.classList.remove('active'));
-  if (link) link.classList.add('active');
-  window.scrollTo(0, 0);
+  activateChapterForSection(id);
+  setActiveNav(id, link);
+  const target = document.getElementById(id);
+  if (target) {
+    // Ensure the section is expanded when navigating to it.
+    target.classList.remove('sec-collapsed');
+    const content = target.closest('.chapter-content');
+    const first = content ? content.querySelector('section.sec') : null;
+    const y = (first && first === target && content)
+      ? (window.scrollY + content.getBoundingClientRect().top)
+      : (window.scrollY + target.getBoundingClientRect().top - 10);
+    // Section navigation should be instant (no visible scrolling).
+    scrollToY(Math.max(0, y), 0, () => {
+      if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+    });
+    return;
+  }
+  // No target found; still update math if present.
   if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+}
+
+/* ─── Summary layout (cards + columns) ─── */
+function updateTabTracker(id, link) {
+  const el = document.getElementById('tab-tracker') || document.querySelector('.sb-brand .sub');
+  if (!el) return;
+  const sec = document.getElementById(id);
+  const h1 = sec ? sec.querySelector('.section-header h1') : null;
+  const fromH1 = (h1 ? h1.textContent : '').trim();
+  if (fromH1) { el.textContent = fromH1; return; }
+  if (id === 'home') { el.textContent = 'Home'; return; }
+  const fromLink = link ? link.textContent.replace(/\s+/g, ' ').trim() : '';
+  if (fromLink) { el.textContent = fromLink; return; }
+  el.textContent = id;
+}
+
+function scrollToY(targetY, _durationMs = 0, onDone) {
+  // All navigation is instant by design.
+  window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+  if (typeof onDone === 'function') onDone();
+}
+
+function setActiveNav(id, link) {
+  document.querySelectorAll('.sb-item').forEach(a => a.classList.remove('active'));
+  // Only sidebar section items should be "active" (ignore brand link / home).
+  const el = link || document.querySelector(`.sb-item[onclick*="show('${id}'"]`);
+  if (el) el.classList.add('active');
+  updateTabTracker(id, el || link || null);
+}
+
+// Make the entire top-left brand block keyboard-clickable.
+window.addEventListener('DOMContentLoaded', () => {
+  const brand = document.querySelector('.sb-brand[role="button"]');
+  if (brand && brand.dataset.kbdInit !== '1') {
+    brand.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        show('home', null);
+      }
+    });
+    brand.dataset.kbdInit = '1';
+  }
+});
+
+function slugify(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function buildChapters() {
+  const main = document.querySelector('main.main');
+  const sidebar = document.querySelector('nav.sidebar');
+  if (!main || !sidebar) return;
+  if (main.dataset.chaptersInit === '1') return;
+
+  // Create chapters based on sidebar grouping. Overview is its own chapter.
+  const chapters = new Map(); // key -> {el, title}
+  const ensure = (key, title) => {
+    if (chapters.has(key)) return chapters.get(key);
+    const wrap = document.createElement('div');
+    wrap.className = 'chapter';
+    wrap.dataset.chapter = key;
+    wrap.id = `chapter-${key}`;
+    chapters.set(key, { el: wrap, title: title || key });
+    return chapters.get(key);
+  };
+
+  // Determine chapter key for each nav item in DOM order.
+  const navChildren = Array.from(sidebar.children);
+  let currentChapterKey = 'overview';
+  ensure('overview', 'Overview');
+  ensure('home', 'Home');
+  const sectionToChapter = new Map();
+  sectionToChapter.set('home', 'home');
+
+  for (const child of navChildren) {
+    if (child.classList && child.classList.contains('sb-group')) {
+      const label = child.querySelector('.sb-group-label');
+      const k = slugify(label ? label.textContent : 'chapter');
+      currentChapterKey = k || currentChapterKey;
+      ensure(currentChapterKey, label ? label.textContent : currentChapterKey);
+      child.querySelectorAll('.sb-item').forEach((a) => {
+        const m = a.getAttribute('onclick')?.match(/show\('([^']+)'/);
+        if (m) sectionToChapter.set(m[1], currentChapterKey);
+      });
+      continue;
+    }
+    if (child.classList && child.classList.contains('sb-item')) {
+      const m = child.getAttribute('onclick')?.match(/show\('([^']+)'/);
+      if (m) sectionToChapter.set(m[1], 'overview');
+    }
+  }
+
+  // Wrap existing sections into chapter containers.
+  const secs = Array.from(main.querySelectorAll(':scope > section.sec'));
+  secs.forEach((sec) => {
+    const key = sectionToChapter.get(sec.id) || 'overview';
+    ensure(key, key);
+    chapters.get(key).el.appendChild(sec);
+  });
+
+  // Replace main contents with chapters in sidebar order.
+  const orderedKeys = [];
+  orderedKeys.push('home');
+  orderedKeys.push('overview');
+  sidebar.querySelectorAll('.sb-group').forEach((g) => {
+    const lbl = g.querySelector('.sb-group-label');
+    const k = slugify(lbl ? lbl.textContent : '');
+    if (k && k !== 'overview') orderedKeys.push(k);
+  });
+
+  main.innerHTML = '';
+  orderedKeys.forEach((k) => {
+    const ch = chapters.get(k);
+    if (ch) main.appendChild(ch.el);
+  });
+
+  // Also append any chapters not covered (safety).
+  for (const [k, ch] of chapters.entries()) {
+    if (!orderedKeys.includes(k)) main.appendChild(ch.el);
+  }
+
+  main.dataset.chaptersInit = '1';
+}
+
+function initChapterHeadersAndSidebarClicks() {
+  const sidebar = document.querySelector('nav.sidebar');
+  if (!sidebar) return;
+
+  // Wrap chapter content for readable width (keep Home full-bleed).
+  document.querySelectorAll('.chapter').forEach((ch) => {
+    if (ch.dataset.wrapInit === '1') return;
+    const key = ch.dataset.chapter || 'chapter';
+    if (key === 'home') { ch.dataset.wrapInit = '1'; return; }
+    if (ch.querySelector(':scope > .chapter-content')) { ch.dataset.wrapInit = '1'; return; }
+    const content = document.createElement('div');
+    content.className = 'chapter-content';
+    while (ch.firstChild) content.appendChild(ch.firstChild);
+    ch.appendChild(content);
+    ch.dataset.wrapInit = '1';
+  });
+
+  // Make sidebar chapter titles clickable.
+  sidebar.querySelectorAll('.sb-group').forEach((g) => {
+    const lbl = g.querySelector('.sb-group-label');
+    if (!lbl || lbl.dataset.clickInit === '1') return;
+    const key = slugify(lbl.textContent || '');
+    if (!key) return;
+    lbl.style.cursor = 'pointer';
+    lbl.setAttribute('role', 'button');
+    lbl.setAttribute('tabindex', '0');
+
+    const go = () => {
+      const chapterEl = document.getElementById(`chapter-${key}`);
+      if (!chapterEl) return;
+      document.querySelectorAll('.chapter').forEach((c) => c.classList.remove('on'));
+      chapterEl.classList.add('on');
+      document.body.classList.toggle('home-mode', chapterEl.dataset.chapter === 'home');
+      setChapterTheme(chapterEl.dataset.chapter || 'overview');
+      // Jump to first section in the chapter (or just top of chapter).
+      const firstSec = chapterEl.querySelector('section.sec');
+      if (firstSec) {
+        const link = g.querySelector('.sb-item');
+        const id = firstSec.id;
+        setActiveNav(id, link);
+        const y = window.scrollY + chapterEl.getBoundingClientRect().top;
+        // Switching chapters should be instant (no scroll animation).
+        scrollToY(Math.max(0, y), 0);
+      } else {
+        const y = window.scrollY + chapterEl.getBoundingClientRect().top;
+        // Switching chapters should be instant (no scroll animation).
+        scrollToY(Math.max(0, y), 0);
+      }
+    };
+
+    lbl.addEventListener('click', go);
+    lbl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+    });
+    lbl.dataset.clickInit = '1';
+  });
+}
+
+function normalizeSectionNums() {
+  // Remove the redundant chapter/category suffix in each section header line:
+  // "§ 7 · End-to-End" -> "§ 7"
+  document.querySelectorAll('.section-num').forEach((el) => {
+    if (!el || el.dataset.norm === '1') return;
+    const t = (el.textContent || '').trim();
+    const beforeDot = t.split('·')[0].trim();
+    if (beforeDot) el.textContent = beforeDot;
+    el.dataset.norm = '1';
+  });
+}
+
+function setChapterTheme(chapterKey) {
+  const root = document.documentElement;
+  const themes = {
+    home:        { hex: '#0ea5e9', rgb: '14,165,233', deep: '#0284c7' },
+    overview:    { hex: '#0ea5e9', rgb: '14,165,233', deep: '#0284c7' },
+    applications:{ hex: '#0ea5e9', rgb: '14,165,233', deep: '#0284c7' }, // sea blue
+    'end-to-end':  { hex: '#7c3aed', rgb: '124,58,237', deep: '#5b21b6' }, // purple
+    datacenters: { hex: '#f97316', rgb: '249,115,22', deep: '#c2410c' }, // orange
+    'beyond-client-server': { hex: '#1d4ed8', rgb: '29,78,216', deep: '#1e40af' }, // dark blue
+    wireless:    { hex: '#16a34a', rgb: '22,163,74', deep: '#166534' }, // green
+    reference:   { hex: '#0f766e', rgb: '15,118,110', deep: '#115e59' }  // teal
+  };
+  const t = themes[chapterKey] || themes.overview;
+  root.style.setProperty('--accent', t.hex);
+  root.style.setProperty('--accent-rgb', t.rgb);
+  root.style.setProperty('--accent-deep', t.deep);
+}
+
+function activateChapterForSection(sectionId) {
+  const sec = document.getElementById(sectionId);
+  if (!sec) return;
+  const chapter = sec.closest('.chapter');
+  if (!chapter) return;
+  document.querySelectorAll('.chapter').forEach((c) => c.classList.remove('on'));
+  chapter.classList.add('on');
+  document.body.classList.toggle('home-mode', chapter.dataset.chapter === 'home');
+  setChapterTheme(chapter.dataset.chapter || 'overview');
+}
+
+function initBottomConfetti() {
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) return;
+  if (document.getElementById('confetti')) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.id = 'confetti';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  const resize = () => {
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  const colors = ['#0ea5e9', '#22c55e', '#f97316', '#e879f9', '#facc15', '#60a5fa'];
+  let parts = [];
+  let raf = null;
+  let lastT = 0;
+
+  // Emission “pressure” (pieces/sec) that ramps up with continued scroll attempts,
+  // then decays smoothly to zero when user stops.
+  let bottomRate = 0;
+  let topRate = 0;
+  let bottomCarry = 0;
+  let topCarry = 0;
+  let wheelStopTimer = null;
+  let touchStopTimer = null;
+
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+  const addPressure = (edge, delta) => {
+    // delta ~ wheel pixels; convert to rate increment (pieces/sec).
+    // Tuned to feel “confetti-y” even on light trackpad wheels.
+    const inc = clamp(Math.abs(delta) / 1.15, 0, 260); // ~3x more confetti
+    if (edge === 'bottom') bottomRate = clamp(bottomRate + inc, 0, 1600);
+    else topRate = clamp(topRate + inc, 0, 1400);
+    if (!raf) raf = requestAnimationFrame(tick);
+  };
+
+  const emit = (edge, count, now) => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const originY = edge === 'bottom' ? (h - 6) : 6;
+    for (let i = 0; i < count; i++) {
+      const originX = Math.random() * w;
+      if (edge === 'bottom') {
+        const a = (-Math.PI / 2) + (Math.random() - 0.5) * (Math.PI / 1.8);
+        const sp = 6 + Math.random() * 9;
+        parts.push({
+          x: originX + (Math.random() - 0.5) * 18,
+          y: originY + (Math.random() - 0.5) * 6,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp - (Math.random() * 2),
+          g: 0.32 + Math.random() * 0.08,
+          r: 2 + Math.random() * 2.8,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.35,
+          life: 520 + Math.random() * 420,
+          born: now,
+          c: colors[Math.floor(Math.random() * colors.length)]
+        });
+      } else {
+        const sp = 1.2 + Math.random() * 3.6;
+        const a = (Math.random() - 0.5) * (Math.PI / 3.2);
+        parts.push({
+          x: originX + (Math.random() - 0.5) * 14,
+          y: originY + (Math.random() - 0.5) * 4,
+          vx: Math.sin(a) * sp,
+          vy: 1.5 + Math.random() * 2.4,
+          g: 0.32 + Math.random() * 0.08,
+          r: 2 + Math.random() * 2.8,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.35,
+          life: 520 + Math.random() * 520,
+          born: now,
+          c: colors[Math.floor(Math.random() * colors.length)]
+        });
+      }
+    }
+  };
+
+  const tick = (t) => {
+    raf = null;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const now = t || performance.now();
+    const dt = lastT ? Math.min(40, now - lastT) : 16;
+    lastT = now;
+
+    // Fast decay so the effect disappears quickly once you stop.
+    const decay = Math.pow(0.78, dt / 16);
+    bottomRate *= decay;
+    topRate *= decay;
+    if (bottomRate < 0.6) bottomRate = 0;
+    if (topRate < 0.6) topRate = 0;
+
+    // Emit based on current rates (pieces per second).
+    bottomCarry += bottomRate * (dt / 1000);
+    topCarry += topRate * (dt / 1000);
+    const bottomN = Math.floor(bottomCarry);
+    const topN = Math.floor(topCarry);
+    if (bottomN > 0) { bottomCarry -= bottomN; emit('bottom', bottomN, now); }
+    if (topN > 0) { topCarry -= topN; emit('top', topN, now); }
+
+    const still = [];
+
+    for (const p of parts) {
+      const age = now - p.born;
+      if (age > p.life) continue;
+      const alpha = Math.max(0, 1 - (age / p.life));
+      p.vy += p.g;
+      p.vx *= 0.995;
+      p.vy *= 0.998;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+
+      // bounce off bottom a bit
+      const floor = window.innerHeight - 4;
+      if (p.y > floor) {
+        p.y = floor;
+        p.vy *= -0.25;
+        p.vx *= 0.85;
+      }
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(-p.r, -p.r * 0.6, p.r * 2, p.r * 1.2);
+      ctx.restore();
+
+      still.push(p);
+    }
+
+    parts = still;
+    if (parts.length || bottomRate > 0 || topRate > 0) raf = requestAnimationFrame(tick);
+  };
+
+  const atBottom = () => (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 2);
+  const atTop = () => (window.scrollY <= 1);
+
+  // Fire when user "keeps trying" to scroll past bottom.
+  window.addEventListener('wheel', (e) => {
+    if (e.deltaY > 0 && atBottom()) addPressure('bottom', e.deltaY);
+    if (e.deltaY < 0 && atTop()) addPressure('top', e.deltaY);
+    // As soon as the user stops pressing the trackpad, wheel events stop.
+    // Kill emission immediately shortly after the last wheel event.
+    if (wheelStopTimer) clearTimeout(wheelStopTimer);
+    wheelStopTimer = setTimeout(() => {
+      bottomRate = 0;
+      topRate = 0;
+      bottomCarry = 0;
+      topCarry = 0;
+    }, 90);
+  }, { passive: true });
+
+  // Touch: detect swipe-up at bottom.
+  let touchY = null;
+  window.addEventListener('touchstart', (e) => {
+    touchY = e.touches && e.touches[0] ? e.touches[0].clientY : null;
+  }, { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    if (touchY == null) return;
+    const y = e.touches && e.touches[0] ? e.touches[0].clientY : null;
+    if (y == null) return;
+    const dy = touchY - y;
+    // swipe up (dy>0) at bottom -> bottom burst
+    if (dy > 8 && atBottom()) addPressure('bottom', dy * 2.2);
+    // swipe down (dy<0) at top -> top burst
+    if (dy < -8 && atTop()) addPressure('top', dy * 2.2);
+
+    if (touchStopTimer) clearTimeout(touchStopTimer);
+    touchStopTimer = setTimeout(() => {
+      bottomRate = 0;
+      topRate = 0;
+      bottomCarry = 0;
+      topCarry = 0;
+    }, 110);
+  }, { passive: true });
+}
+
+function initScrollSpy() {
+  const main = document.querySelector('main.main');
+  if (!main || main.dataset.spyInit === '1') return;
+
+  const getActiveChapter = () => document.querySelector('.chapter.on') || document.querySelector('.chapter');
+
+  const tick = () => {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    const secs = Array.from(ch.querySelectorAll('section.sec'));
+    if (!secs.length) return;
+
+    const topPad = 110; // approx header + breathing room
+    let current = secs[0].id;
+    for (const s of secs) {
+      const r = s.getBoundingClientRect();
+      if (r.top - topPad <= 0) current = s.id;
+      else break;
+    }
+
+    const activeLink = document.querySelector(`.sb-item[onclick*="show('${current}'"]`);
+    setActiveNav(current, activeLink);
+  };
+
+  let raf = null;
+  window.addEventListener('scroll', () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = null;
+      tick();
+    });
+  }, { passive: true });
+
+  // initial tick
+  tick();
+  main.dataset.spyInit = '1';
+}
+
+function initCardToggles() {
+  document.querySelectorAll('.card').forEach((card) => {
+    if (!card || card.dataset.cardTogInit === '1') return;
+    // Require a visible title to collapse to.
+    const title = card.querySelector(':scope > h2');
+    if (!title) return;
+
+    const head = document.createElement('div');
+    head.className = 'card-head';
+
+    const btn = document.createElement('button');
+    btn.className = 'card-toggle';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Collapse/expand card');
+
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    if (!body.id) body.id = `card-${Math.random().toString(36).slice(2)}`;
+
+    // Move everything except the title into the body.
+    const children = Array.from(card.childNodes);
+    children.forEach((n) => {
+      if (n === title) return;
+      body.appendChild(n);
+    });
+
+    const sync = () => {
+      const expanded = !card.classList.contains('collapsed');
+      btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      btn.setAttribute('aria-controls', body.id);
+    };
+
+    const toggle = () => {
+      card.classList.toggle('collapsed');
+      sync();
+    };
+
+    btn.addEventListener('click', toggle);
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+
+    head.appendChild(title);
+    head.appendChild(btn);
+    card.appendChild(head);
+    card.appendChild(body);
+    card.dataset.cardTogInit = '1';
+    sync();
+  });
+}
+
+function initSectionToggles() {
+  document.querySelectorAll('section.sec').forEach((sec) => {
+    if (!sec || sec.dataset.secTogInit === '1') return;
+    const header = sec.querySelector(':scope > .section-header');
+    if (!header) return;
+
+    // Wrap everything after the header in a body container.
+    const body = document.createElement('div');
+    body.className = 'sec-body';
+    if (!body.id) body.id = `sec-${sec.id || Math.random().toString(36).slice(2)}-body`;
+
+    let n = header.nextSibling;
+    while (n) {
+      const next = n.nextSibling;
+      body.appendChild(n);
+      n = next;
+    }
+    sec.appendChild(body);
+
+    // Create a header bar so the toggle can sit top-right.
+    const h1 = header.querySelector(':scope h1');
+    if (!h1) return;
+    const bar = document.createElement('div');
+    bar.className = 'sec-headbar';
+    h1.parentNode.insertBefore(bar, h1);
+    bar.appendChild(h1);
+
+    const btn = document.createElement('button');
+    btn.className = 'sec-toggle';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Collapse/expand section');
+    btn.setAttribute('aria-controls', body.id);
+    bar.appendChild(btn);
+
+    const sync = () => {
+      const expanded = !sec.classList.contains('sec-collapsed');
+      btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    };
+    const toggle = () => {
+      sec.classList.toggle('sec-collapsed');
+      sync();
+    };
+    btn.addEventListener('click', toggle);
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+
+    sec.dataset.secTogInit = '1';
+    sync();
+  });
+}
+
+function initOriginalContentLinks() {
+  const base = 'https://textbook.cs168.io';
+  const map = {
+    dns: `${base}/applications/dns.html`,
+    http: `${base}/applications/http.html`,
+
+    ethernet: `${base}/end-to-end/ethernet.html`,
+    stp: `${base}/end-to-end/l2-routing.html`,
+    arp: `${base}/end-to-end/arp.html`,
+    dhcp: `${base}/end-to-end/dhcp.html`,
+    nat: `${base}/end-to-end/nat.html`,
+    tls: `${base}/end-to-end/tls.html`,
+    e2e: `${base}/end-to-end/end-to-end.html`,
+
+    'dc-topo': `${base}/datacenter/topology.html`,
+    'dc-cc': `${base}/datacenter/datacenter-cc.html`,
+    'dc-routing': `${base}/datacenter/datacenter-routing.html`,
+    'dc-addr': `${base}/datacenter/datacenter-addressing.html`,
+    'dc-virt': `${base}/datacenter/virtualization.html`,
+    sdn: `${base}/datacenter/sdn.html`,
+    'host-net': `${base}/datacenter/host-networking.html`,
+
+    multicast: `${base}/beyond-client-server/intro.html`,
+    'ip-multicast': `${base}/beyond-client-server/ip-multicast-service-model.html`,
+    dvmrp: `${base}/beyond-client-server/dvmrp.html`,
+    cbt: `${base}/beyond-client-server/cbt.html`,
+    'mc-challenges': `${base}/beyond-client-server/ip-multicast-challenges.html`,
+    'overlay-mc': `${base}/beyond-client-server/overlay-multicast.html`,
+    collective: `${base}/beyond-client-server/collective-operations.html`,
+    'coll-impl': `${base}/beyond-client-server/collective-implementations.html`,
+
+    wireless: `${base}/wireless/wireless-links.html`,
+    cellular: `${base}/wireless/cellular.html`,
+
+    glossary: `${base}/glossary.html`,
+    'tcp-recap': `${base}/transport/tcp-design.html`,
+    'routing-recap': `${base}/routing/introduction-to-routing.html`
+  };
+
+  document.querySelectorAll('section.sec').forEach((sec) => {
+    if (!sec.id || sec.id === 'home') return;
+    if (sec.dataset.origInit === '1') return;
+    const url = map[sec.id] || base;
+
+    const header = sec.querySelector(':scope > .section-header');
+    if (!header) return;
+    const lede = header.querySelector(':scope > .lede');
+
+    const a = document.createElement('a');
+    a.className = 'orig-link';
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noreferrer';
+    a.appendChild(document.createTextNode('Go to original content '));
+    const arr = document.createElement('span');
+    arr.className = 'arr';
+    arr.textContent = '→';
+    a.appendChild(arr);
+
+    if (lede) lede.insertAdjacentElement('afterend', a);
+    else header.appendChild(a);
+
+    sec.dataset.origInit = '1';
+  });
+}
+
+function normalizeTldrs() {
+  // Convert legacy <div class="tldr"> blocks into standard cards:
+  // - adds a "TL;DR" header
+  // - preserves every word (including the original label text)
+  document.querySelectorAll('section.sec .tldr').forEach((t) => {
+    if (t.dataset.tldrNorm === '1') return;
+    const sec = t.closest('section.sec');
+    const labelEl = t.querySelector(':scope > .label');
+    const labelText = (labelEl ? labelEl.textContent : '').trim();
+
+    // Build card shell
+    const card = document.createElement('div');
+    card.className = 'card full tint-blue tldr-card';
+
+    const h2 = document.createElement('h2');
+    if (sec && sec.id === 'overview' && labelText) {
+      h2.textContent = labelText; // "The Big Picture"
+    } else {
+      h2.textContent = 'TL;DR';
+    }
+    card.appendChild(h2);
+
+    // Move all original children EXCEPT the label element into the card.
+    Array.from(t.childNodes).forEach((n) => {
+      if (n === labelEl) return;
+      card.appendChild(n);
+    });
+
+    // Replace in DOM
+    t.replaceWith(card);
+    card.dataset.tldrNorm = '1';
+  });
+}
+
+function initSummaryCards() {
+  // Never nest “already boxed” elements inside a new card.
+  const alreadyBoxed = new Set(['diagram-wrap', 'math-block', 'callout', 'def-box', 'demo-panel']);
+
+  const isElement = (n) => n && n.nodeType === 1;
+  const boxedClass = (el) => {
+    if (!el || !el.classList) return null;
+    for (const c of alreadyBoxed) if (el.classList.contains(c)) return c;
+    return null;
+  };
+
+  document.querySelectorAll('section.sec').forEach((sec) => {
+    if (sec.dataset.cardsInit === '1') return;
+    const header = sec.querySelector(':scope > .section-header');
+    if (!header) return;
+
+    const grid = document.createElement('div');
+    grid.className = 'sec-grid';
+
+    // Move all nodes after header into a working list (preserves content exactly).
+    const nodes = [];
+    let n = header.nextSibling;
+    while (n) {
+      const next = n.nextSibling;
+      // skip pure whitespace text nodes
+      if (!(n.nodeType === 3 && !n.textContent.trim())) nodes.push(n);
+      n = next;
+    }
+    nodes.forEach(node => sec.removeChild(node));
+
+    const flushCard = (card) => {
+      if (!card) return;
+      if (!card.childNodes.length) return;
+      grid.appendChild(card);
+    };
+
+    let card = null;
+    let sawContent = false;
+    let tintIdx = 0;
+    const tints = ['tint-blue', 'tint-purple', 'tint-amber'];
+
+    const startCard = (opts = {}) => {
+      const c = document.createElement('div');
+      const tint = tints[tintIdx % tints.length];
+      tintIdx++;
+      c.className = 'card ' + tint + (opts.full ? ' full' : '');
+      if (opts.quiz) c.classList.add('quiz');
+      return c;
+    };
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+
+      // Headings become the start of a new card (reduces "too many headers" feeling).
+      if (isElement(node) && node.tagName === 'H2') {
+        flushCard(card);
+        card = startCard();
+        card.appendChild(node);
+        sawContent = true;
+        continue;
+      }
+
+      if (isElement(node)) {
+        const b = boxedClass(node);
+        if (b) {
+          // Prefer keeping "title + its boxed content" together.
+          // If we already started a card (via an H2), attach boxed blocks to it,
+          // but visually flatten the inner box so we don't get double-boxing.
+          if (card) {
+            node.classList.add('in-card');
+            card.appendChild(node);
+          } else {
+            // Otherwise keep boxed content full-width (no nesting).
+            flushCard(card);
+            node.classList.add('span');
+            grid.appendChild(node);
+            card = null;
+          }
+          sawContent = true;
+          continue;
+        }
+      }
+
+      // If we haven't hit an H2 yet, keep content full-width and unboxed.
+      if (!card) {
+        if (isElement(node)) node.classList?.add?.('span');
+        grid.appendChild(node);
+      } else {
+        // Keep diagrams/tables with their header by default (never force them into solo cards).
+        card.appendChild(node);
+      }
+      if (isElement(node) || (node.nodeType === 3 && node.textContent.trim())) sawContent = true;
+    }
+
+    flushCard(card);
+    if (sawContent) sec.appendChild(grid);
+    sec.dataset.cardsInit = '1';
+  });
+}
+
+/* ─── Selective columns: only for similar text-only cards ─── */
+function initSelectiveColumns() {
+  const isElement = (n) => n && n.nodeType === 1;
+  const hasAny = (root, selectors) => selectors.some(sel => root.querySelector(sel));
+  const wordCount = (el) => (el.textContent || '').trim().split(/\s+/).filter(Boolean).length;
+
+  const isTextOnlyCard = (card) => {
+    if (!card || !card.classList || !card.classList.contains('card')) return false;
+    if (card.classList.contains('full') || card.classList.contains('quiz')) return false;
+    // Never put these in columns
+    if (hasAny(card, ['table', 'pre', 'svg', '.diagram-wrap', '.math-block', '.demo-panel'])) return false;
+    // If it contains an input/form (interactive), skip
+    if (hasAny(card, ['form', 'input', 'button', 'select', 'textarea'])) return false;
+    return true;
+  };
+
+  const similarEnough = (a, b) => {
+    const wa = wordCount(a);
+    const wb = wordCount(b);
+    if (wa < 18 || wb < 18) return false; // extremely tiny -> looks weird in columns
+    const lo = Math.min(wa, wb);
+    const hi = Math.max(wa, wb);
+    return (hi / lo) <= 2.35; // more forgiving “same length”
+  };
+
+  document.querySelectorAll('section.sec').forEach((sec) => {
+    if (sec.dataset.colsInit === '1') return;
+    const grid = sec.querySelector(':scope > .sec-grid');
+    if (!grid) return;
+
+    let i = 0;
+    while (i < grid.children.length) {
+      const el = grid.children[i];
+      if (!isElement(el) || !el.classList.contains('card') || !isTextOnlyCard(el)) {
+        i++;
+        continue;
+      }
+
+      // Gather a run of consecutive eligible cards from the live DOM.
+      const run = [];
+      let j = i;
+      while (j < grid.children.length) {
+        const c = grid.children[j];
+        if (!isElement(c) || !c.classList.contains('card') || !isTextOnlyCard(c)) break;
+        run.push(c);
+        j++;
+      }
+
+      if (run.length < 2) {
+        i++;
+        continue;
+      }
+
+      // Prefer 4-card grids (2×2) when available (e.g. virtualization), else 2-up.
+      const want = run.length >= 4 ? 4 : 2;
+      let slice = run.slice(0, want);
+
+      if (slice.length === 2) {
+        if (!similarEnough(slice[0], slice[1])) { i++; continue; }
+      } else if (slice.length === 4) {
+        // ensure we can make two decent pairs: (0,1) and (2,3)
+        if (!similarEnough(slice[0], slice[1]) || !similarEnough(slice[2], slice[3])) {
+          // fallback to first pair only if it fits
+          if (!similarEnough(slice[0], slice[1])) { i++; continue; }
+          slice = slice.slice(0, 2);
+        }
+      }
+
+      const row = document.createElement('div');
+      row.className = 'card-row row2';
+      // Insert row before the first card, then move cards into it.
+      grid.insertBefore(row, slice[0]);
+      slice.forEach(c => row.appendChild(c));
+
+      // Continue scanning after the inserted row.
+      i++;
+    }
+
+    sec.dataset.colsInit = '1';
+  });
+}
+
+/* ─── Concept checks (optional new UI, preserves all original content) ─── */
+function initConceptChecks() {
+  const bank = {
+    dns: [{
+      id: 'dns-1',
+      title: 'Concept Check',
+      prompt: 'DNS uses UDP port 53 primarily because…',
+      choices: [
+        { t: 'UDP is always more reliable than TCP.', ok: false, why: 'UDP is not reliable by itself; DNS relies on retries/timeouts and typically small messages.' },
+        { t: 'DNS needs to be fast with low overhead, and most queries are small.', ok: true, why: 'UDP avoids TCP handshake overhead; DNS fits small query/response patterns.' },
+        { t: 'TCP cannot carry DNS packets.', ok: false, why: 'DNS can run over TCP (zone transfers, large responses, and fallback cases).' }
+      ]
+    }],
+    http: [{
+      id: 'http-1',
+      title: 'Concept Check',
+      prompt: 'HTTP/1.1 pipelining tries to improve performance by…',
+      choices: [
+        { t: 'Opening a new TCP connection for every request.', ok: false, why: 'That increases handshake overhead and can be slower.' },
+        { t: 'Sending multiple requests back-to-back on one TCP connection.', ok: true, why: 'Pipelining queues requests without waiting for each response.' },
+        { t: 'Encrypting HTTP payloads at Layer 2.', ok: false, why: 'Encryption is handled by TLS (between TCP and HTTP), not Layer 2.' }
+      ]
+    }],
+    nat: [{
+      id: 'nat-1',
+      title: 'Concept Check',
+      prompt: 'Why does NAT rewrite ports as well as IP addresses?',
+      choices: [
+        { t: 'To allow multiple internal hosts to share one public IP without ambiguity.', ok: true, why: 'Port mapping disambiguates flows and enables correct demultiplexing of replies.' },
+        { t: 'Because routers are required to randomize ports by law.', ok: false, why: 'Not a requirement; it’s a design for multiplexing and sometimes security side-effects.' },
+        { t: 'To increase the speed of DNS lookups.', ok: false, why: 'Unrelated; DNS runs independently of NAT port rewriting.' }
+      ]
+    }],
+    tls: [{
+      id: 'tls-1',
+      title: 'Concept Check',
+      prompt: 'TLS primarily adds which properties on top of TCP?',
+      choices: [
+        { t: 'Confidentiality, integrity, and server authentication.', ok: true, why: 'TLS encrypts, authenticates, and protects integrity (plus optional client auth).' },
+        { t: 'Best-effort delivery and reordering.', ok: false, why: 'Those are network-layer behaviors; TCP already gives ordered reliable delivery.' },
+        { t: 'MAC address learning.', ok: false, why: 'That’s a Layer 2 switching function.' }
+      ]
+    }],
+    wireless: [{
+      id: 'wireless-1',
+      title: 'Concept Check',
+      prompt: 'Why doesn’t CSMA/CD work well for WiFi?',
+      choices: [
+        { t: 'WiFi packets are too large for collision detection.', ok: false, why: 'Size isn’t the core issue.' },
+        { t: 'A transmitter’s own signal overwhelms its receiver, so it can’t detect collisions while sending.', ok: true, why: 'You can’t “listen while talking” effectively on WiFi radios.' },
+        { t: 'Because WiFi uses IP multicast for acknowledgements.', ok: false, why: 'ACKs are link-layer unicast frames.' }
+      ]
+    }],
+    cellular: [{
+      id: 'cellular-1',
+      title: 'Concept Check',
+      prompt: 'In the 5-step cellular lifecycle, where do forged-IMSI attacks get caught?',
+      choices: [
+        { t: 'Discovery', ok: false, why: 'Discovery is just listening to beacons; no authentication happens.' },
+        { t: 'Attachment', ok: true, why: 'Attachment is where the UE must prove it has the shared key associated with the IMSI.' },
+        { t: 'Handover', ok: false, why: 'Handover is about mobility after you’re already attached.' }
+      ]
+    }]
+  };
+
+  const makeQuiz = (q) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'card full quiz';
+    wrap.setAttribute('data-quiz-id', q.id);
+
+    const titleRow = document.createElement('div');
+    titleRow.className = 'qtitle';
+    const h = document.createElement('h2');
+    h.textContent = q.title || 'Concept Check';
+    const tag = document.createElement('span');
+    tag.className = 'tag purple';
+    tag.textContent = 'interactive';
+    titleRow.appendChild(h);
+    titleRow.appendChild(tag);
+
+    const prompt = document.createElement('div');
+    prompt.className = 'qprompt';
+    prompt.textContent = q.prompt;
+
+    const form = document.createElement('form');
+    form.setAttribute('autocomplete', 'off');
+    const choices = document.createElement('div');
+    choices.className = 'choices';
+
+    const name = `q-${q.id}`;
+    q.choices.forEach((c, idx) => {
+      const id = `${name}-${idx}`;
+      const lab = document.createElement('label');
+      lab.className = 'choice';
+      const inp = document.createElement('input');
+      inp.type = 'radio';
+      inp.name = name;
+      inp.value = String(idx);
+      inp.id = id;
+      const txt = document.createElement('div');
+      txt.textContent = c.t;
+      lab.appendChild(inp);
+      lab.appendChild(txt);
+      choices.appendChild(lab);
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const btn = document.createElement('button');
+    btn.type = 'submit';
+    btn.className = 'run-btn';
+    btn.textContent = 'Check answer';
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'run-btn';
+    reset.style.background = 'rgba(17,26,46,.06)';
+    reset.style.color = 'rgba(17,26,46,.78)';
+    reset.textContent = 'Reset';
+    actions.appendChild(btn);
+    actions.appendChild(reset);
+
+    const fb = document.createElement('div');
+    fb.className = 'feedback';
+    fb.setAttribute('role', 'status');
+    fb.setAttribute('aria-live', 'polite');
+
+    form.appendChild(choices);
+    form.appendChild(actions);
+    form.appendChild(fb);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const checked = form.querySelector('input[type="radio"]:checked');
+      if (!checked) {
+        fb.className = 'feedback bad';
+        fb.innerHTML = '<span class="k">Pick one</span> Choose an option first.';
+        return;
+      }
+      const idx = parseInt(checked.value, 10);
+      const choice = q.choices[idx];
+      const ok = !!choice.ok;
+      fb.className = 'feedback ' + (ok ? 'ok' : 'bad');
+      fb.innerHTML = `<span class="k">${ok ? 'Correct' : 'Not quite'}</span> ${choice.why || ''}`;
+    });
+    reset.addEventListener('click', () => {
+      form.reset();
+      fb.className = 'feedback';
+      fb.textContent = '';
+    });
+
+    wrap.appendChild(titleRow);
+    wrap.appendChild(prompt);
+    wrap.appendChild(form);
+    return wrap;
+  };
+
+  document.querySelectorAll('section.sec').forEach((sec) => {
+    if (sec.dataset.quizInit === '1') return;
+    const qs = bank[sec.id];
+    if (!qs || !qs.length) return;
+    const grid = sec.querySelector(':scope > .sec-grid');
+    if (!grid) return;
+    const insertAfter = grid.querySelector(':scope > .card.full') || grid.firstChild;
+    if (!insertAfter) return;
+
+    // Insert first quiz near the top for “dynamic” feel; keep content intact.
+    const quizEl = makeQuiz(qs[0]);
+    insertAfter.insertAdjacentElement('afterend', quizEl);
+    sec.dataset.quizInit = '1';
+  });
 }
 
 /* ─── DNS trace demo ─── */
@@ -2433,15 +4449,15 @@ function traceDNS() {
   lines.push('<span style="color:#6b7280">$ dig +trace ' + domain + '</span>');
   let chain = '.';
   let depth = 0;
-  lines.push('<span style="color:#1f4e7a">→ ask root @ ' + ips['.'] + '</span>');
+  lines.push('<span style="color:var(--accent)">→ ask root @ ' + ips['.'] + '</span>');
   lines.push('  ↳ "ask <strong>.' + parts[0] + '</strong> server @ ' + (ips[parts[0]] || '...') + '"');
   if (parts.length > 1) {
     let zone1 = parts[0];
-    lines.push('<span style="color:#1f4e7a">→ ask .' + zone1 + ' @ ' + (ips[zone1] || '...') + '</span>');
+    lines.push('<span style="color:var(--accent)">→ ask .' + zone1 + ' @ ' + (ips[zone1] || '...') + '</span>');
     let zone2 = parts[1] + '.' + parts[0];
     lines.push('  ↳ "ask <strong>' + zone2 + '</strong> server @ ' + (ips[zone2] || '...') + '"');
-    lines.push('<span style="color:#1f4e7a">→ ask ' + zone2 + ' @ ' + (ips[zone2] || '...') + '</span>');
-    lines.push('  ↳ <strong style="color:#4a6b3a">' + domain + ' = ' + (Math.floor(Math.random()*200+10) + '.' + Math.floor(Math.random()*250) + '.' + Math.floor(Math.random()*250) + '.' + Math.floor(Math.random()*250)) + '</strong>');
+    lines.push('<span style="color:var(--accent)">→ ask ' + zone2 + ' @ ' + (ips[zone2] || '...') + '</span>');
+    lines.push('  ↳ <strong style="color:var(--green)">' + domain + ' = ' + (Math.floor(Math.random()*200+10) + '.' + Math.floor(Math.random()*250) + '.' + Math.floor(Math.random()*250) + '.' + Math.floor(Math.random()*250)) + '</strong>');
   }
   out.innerHTML = lines.join('<br>');
 }
@@ -2463,20 +4479,61 @@ window.addEventListener('keydown', (e) => {
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
   if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  const items = Array.from(document.querySelectorAll('.sb-item'));
+  // Global sequential navigation by sidebar order:
+  // - normally advances within the current chapter
+  // - at chapter boundaries, goes to first/last section of adjacent chapter
+  const items = Array.from(document.querySelectorAll('.sb-item'))
+    .filter((a) => (a.getAttribute('onclick') || '').includes("show('"));
   if (!items.length) return;
-  let idx = items.findIndex(el => el.classList.contains('active'));
-  if (idx === -1) idx = 0;
+
+  const active = document.querySelector('.sb-item.active');
+  let idx = active ? items.indexOf(active) : -1;
+
+  // If we don't have an active sidebar item, infer current section by scroll position
+  // within the active chapter and map it back to the sidebar list.
+  if (idx === -1) {
+    const chapter = document.querySelector('.chapter.on') || document.querySelector('.chapter');
+    if (!chapter) return;
+    const secs = Array.from(chapter.querySelectorAll('section.sec'));
+    if (!secs.length) return;
+    const topPad = 20;
+    let curId = secs[0].id;
+    for (const s of secs) {
+      const r = s.getBoundingClientRect();
+      if (r.top - topPad <= 0) curId = s.id;
+      else break;
+    }
+    idx = items.findIndex((a) => (a.getAttribute('onclick') || '').includes(`show('${curId}'`));
+    if (idx === -1) idx = 0;
+  }
+
   const next = e.key === 'ArrowDown' ? Math.min(idx + 1, items.length - 1)
                                      : Math.max(idx - 1, 0);
   if (next === idx) return;
   e.preventDefault();
   items[next].click();
-  items[next].scrollIntoView({block: 'nearest'});
-  window.scrollTo({top: 0, behavior: 'instant'});
+  items[next].scrollIntoView({ block: 'nearest' });
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+  buildChapters();
+  initChapterHeadersAndSidebarClicks();
+  normalizeSectionNums();
+  normalizeTldrs();
+  initSummaryCards();
+  initSelectiveColumns();
+  initConceptChecks();
+  initCardToggles();
+  initSectionToggles();
+  initOriginalContentLinks();
+  initBottomConfetti();
+  // Initialize to the currently active tab (or overview).
+  const active = document.querySelector('.sb-item.active') || document.querySelector('.sb-item');
+  const m = active ? active.getAttribute('onclick')?.match(/show\('([^']+)'/) : null;
+  const startId = 'home';
+  activateChapterForSection(startId);
+  setActiveNav(startId, null);
+  initScrollSpy();
   traceDNS();
   updateBackoff();
 });
