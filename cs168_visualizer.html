@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 168 — Internet Architecture — Spring 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-chtml.js"></script>
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(','\\)'], ['$','$']], displayMath: [['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+};
+</script>
+<style>
+:root {
+  --ink: #0d1117;
+  --ink2: #1c2333;
+  --ink3: #6b7280;
+  --paper: #f4f1ea;
+  --paper2: #ebe6d8;
+  --paper3: #ddd5be;
+  --rule: #b8a87a;
+  --accent: #1f4e7a;       /* deep network blue */
+  --accent2: #c9722c;      /* burnt orange — packet color */
+  --gold: #b08020;
+  --green: #4a6b3a;
+  --red: #a8362b;
+  --purple: #5a3d6b;
+  --faint: #a89878;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Inter', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15.5px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(31,78,122,.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(201,114,44,.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  background: var(--ink);
+  color: #d6d3c4;
+  padding: 1.5rem 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255,255,255,.05);
+}
+.sb-brand {
+  padding: 0 1.5rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.sb-brand .num {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .15em;
+  color: #b08020;
+  text-transform: uppercase;
+}
+.sb-brand .title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: #f4f1ea;
+  margin-top: 4px;
+  letter-spacing: -.01em;
+}
+.sb-brand .sub {
+  font-size: 12px;
+  color: #8a8474;
+  margin-top: 2px;
+}
+.sb-group {
+  margin-top: 1rem;
+}
+.sb-group-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: #b08020;
+  padding: .65rem 1.5rem .35rem;
+}
+.sb-item {
+  display: block;
+  padding: .42rem 1.5rem;
+  font-size: 13px;
+  color: #c5bfaf;
+  cursor: pointer;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: all .12s;
+  line-height: 1.35;
+}
+.sb-item:hover {
+  background: rgba(255,255,255,.04);
+  color: #f4f1ea;
+}
+.sb-item.active {
+  background: rgba(176,128,32,.08);
+  border-left-color: #b08020;
+  color: #f4f1ea;
+}
+.sb-item .num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #8a8474;
+  display: inline-block;
+  width: 22px;
+}
+
+/* ─── MAIN ─── */
+.main {
+  padding: 3rem 4rem 6rem;
+  max-width: 920px;
+}
+@media (max-width: 1100px) {
+  .main { padding: 2rem 2rem 4rem; }
+  .app { grid-template-columns: 240px 1fr; }
+}
+
+.sec { display: none; }
+.sec.on { display: block; }
+
+.section-header {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+.section-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: .35rem;
+}
+.section-header h1 {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.section-header .lede {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--ink3);
+  margin-top: .5rem;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 2.25rem 0 .85rem;
+  color: var(--ink);
+  letter-spacing: -.01em;
+}
+h3 {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--ink3);
+  margin: 1.5rem 0 .6rem;
+  font-weight: 600;
+}
+p { margin: .65rem 0; }
+strong { color: var(--ink); font-weight: 600; }
+em { color: var(--ink2); }
+
+code {
+  font-family: var(--mono);
+  font-size: .9em;
+  background: var(--paper2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--accent);
+}
+pre {
+  background: var(--ink);
+  color: #d6d3c4;
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 1rem 0;
+}
+pre code { background: none; color: inherit; padding: 0; }
+
+ul, ol { margin: .5rem 0 .85rem 1.5rem; }
+li { margin: .25rem 0; }
+
+/* ─── BOXES ─── */
+.def-box {
+  background: var(--paper2);
+  border-left: 3px solid var(--accent);
+  padding: .75rem 1.1rem;
+  margin: 1rem 0;
+  border-radius: 0 4px 4px 0;
+}
+.def-box .label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: .25rem;
+}
+.def-box .term {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.callout {
+  background: var(--paper2);
+  border-left: 3px solid var(--gold);
+  padding: .75rem 1.1rem;
+  margin: 1rem 0;
+  border-radius: 0 4px 4px 0;
+  font-size: .94em;
+}
+.callout.green { border-left-color: var(--green); }
+.callout.red { border-left-color: var(--red); }
+.callout.blue { border-left-color: var(--accent); }
+.callout .label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--ink3);
+  margin-bottom: .25rem;
+}
+
+.tldr {
+  background: linear-gradient(135deg, rgba(176,128,32,.12) 0%, rgba(176,128,32,.04) 100%);
+  border: 1px solid rgba(176,128,32,.3);
+  padding: 1rem 1.25rem;
+  margin: 1rem 0 1.5rem;
+  border-radius: 5px;
+  font-size: .96em;
+}
+.tldr .label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .15em;
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: .35rem;
+}
+
+.math-block {
+  background: var(--paper3);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: .9rem 1.25rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: .92em;
+}
+th, td {
+  text-align: left;
+  padding: .55rem .8rem;
+  border-bottom: 1px solid var(--rule);
+}
+th {
+  background: var(--paper2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink2);
+  font-weight: 600;
+}
+tr:hover td { background: var(--paper2); }
+
+/* ─── SVG DIAGRAMS ─── */
+.diagram-wrap {
+  background: var(--paper2);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin: 1.25rem 0;
+  text-align: center;
+}
+.diagram-wrap .caption {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--ink3);
+  margin-top: .6rem;
+}
+
+/* ─── DEMO PANELS ─── */
+.demo-panel {
+  background: var(--paper2);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 1.1rem 1.3rem;
+  margin: 1.5rem 0;
+}
+.demo-panel .demo-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: .85rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.demo-panel .demo-title::before {
+  content: '▸';
+  color: var(--accent);
+}
+.controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: .85rem; }
+.ctrl-group { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.ctrl-group label { font-family: var(--mono); font-size: 10.5px; color: var(--ink3); letter-spacing: .05em; }
+.ctrl-group input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px;
+  background: var(--paper3); border-radius: 2px; outline: none;
+}
+.ctrl-group input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+.ctrl-group .val {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+}
+button.run-btn {
+  padding: .42rem 1rem;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .05em;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+button.run-btn:hover { background: var(--accent); }
+.stat-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.stat {
+  background: var(--paper);
+  padding: .55rem .85rem;
+  border-radius: 4px;
+  border: 1px solid var(--rule);
+  flex: 1;
+  min-width: 110px;
+}
+.stat .lbl {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink3);
+}
+.stat .val {
+  font-family: var(--mono);
+  font-size: 16px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+footer {
+  text-align: center;
+  padding: 2rem;
+  color: var(--ink3);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  border-top: 1px solid var(--rule);
+  margin-top: 4rem;
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  background: var(--paper3);
+  color: var(--ink2);
+  letter-spacing: .04em;
+}
+.pill.blue { background: rgba(31,78,122,.15); color: var(--accent); }
+.pill.orange { background: rgba(201,114,44,.15); color: var(--accent2); }
+.pill.green { background: rgba(74,107,58,.15); color: var(--green); }
+.pill.red { background: rgba(168,54,43,.12); color: var(--red); }
+
+.kvtable td:first-child {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  width: 32%;
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═════════ SIDEBAR ═════════ -->
+<nav class="sidebar">
+  <div class="sb-brand">
+    <div class="num">CS 168 · Spring 2026</div>
+    <div class="title">Internet Architecture</div>
+    <div class="sub">Applications → Wireless</div>
+  </div>
+
+  <a class="sb-item active" onclick="show('overview',this)"><span class="num">§0</span>Overview</a>
+
+  <div class="sb-group">
+    <div class="sb-group-label">Applications</div>
+    <a class="sb-item" onclick="show('dns',this)"><span class="num">§1</span>DNS</a>
+    <a class="sb-item" onclick="show('http',this)"><span class="num">§2</span>HTTP</a>
+  </div>
+
+  <div class="sb-group">
+    <div class="sb-group-label">End-to-End</div>
+    <a class="sb-item" onclick="show('ethernet',this)"><span class="num">§3</span>Ethernet</a>
+    <a class="sb-item" onclick="show('stp',this)"><span class="num">§4</span>L2 Routing (STP)</a>
+    <a class="sb-item" onclick="show('arp',this)"><span class="num">§5</span>ARP</a>
+    <a class="sb-item" onclick="show('dhcp',this)"><span class="num">§6</span>DHCP</a>
+    <a class="sb-item" onclick="show('nat',this)"><span class="num">§7</span>NAT</a>
+    <a class="sb-item" onclick="show('tls',this)"><span class="num">§8</span>TLS</a>
+    <a class="sb-item" onclick="show('e2e',this)"><span class="num">§9</span>End-to-End Walkthrough</a>
+  </div>
+
+  <div class="sb-group">
+    <div class="sb-group-label">Datacenters</div>
+    <a class="sb-item" onclick="show('dc-topo',this)"><span class="num">§10</span>Topologies</a>
+    <a class="sb-item" onclick="show('dc-cc',this)"><span class="num">§11</span>Congestion Control</a>
+    <a class="sb-item" onclick="show('dc-routing',this)"><span class="num">§12</span>Routing</a>
+    <a class="sb-item" onclick="show('dc-addr',this)"><span class="num">§13</span>Addressing</a>
+    <a class="sb-item" onclick="show('dc-virt',this)"><span class="num">§14</span>Virtualization</a>
+    <a class="sb-item" onclick="show('sdn',this)"><span class="num">§15</span>SDN</a>
+    <a class="sb-item" onclick="show('host-net',this)"><span class="num">§16</span>Host Networking</a>
+  </div>
+
+  <div class="sb-group">
+    <div class="sb-group-label">Beyond Client-Server</div>
+    <a class="sb-item" onclick="show('multicast',this)"><span class="num">§17</span>Multicast Intro</a>
+    <a class="sb-item" onclick="show('ip-multicast',this)"><span class="num">§18</span>IP Multicast</a>
+    <a class="sb-item" onclick="show('dvmrp',this)"><span class="num">§19</span>DVMRP</a>
+    <a class="sb-item" onclick="show('cbt',this)"><span class="num">§20</span>Core-Based Trees</a>
+    <a class="sb-item" onclick="show('mc-challenges',this)"><span class="num">§21</span>IP Multicast Issues</a>
+    <a class="sb-item" onclick="show('overlay-mc',this)"><span class="num">§22</span>Overlay Multicast</a>
+    <a class="sb-item" onclick="show('collective',this)"><span class="num">§23</span>Collective Operations</a>
+    <a class="sb-item" onclick="show('coll-impl',this)"><span class="num">§24</span>Collective Implementations</a>
+  </div>
+
+  <div class="sb-group">
+    <div class="sb-group-label">Wireless</div>
+    <a class="sb-item" onclick="show('wireless',this)"><span class="num">§25</span>Wireless Links</a>
+    <a class="sb-item" onclick="show('cellular',this)"><span class="num">§26</span>Cellular</a>
+  </div>
+
+  <div class="sb-group">
+    <div class="sb-group-label">Reference</div>
+    <a class="sb-item" onclick="show('glossary',this)"><span class="num">§G</span>Glossary</a>
+  </div>
+</nav>
+
+<!-- ═════════ MAIN ═════════ -->
+<main class="main">
+
+<!-- ═════════ OVERVIEW ═════════ -->
+<section class="sec on" id="overview">
+  <div class="section-header">
+    <div class="section-num">§ 0 · Overview</div>
+    <h1>The Last Half of CS 168</h1>
+    <div class="lede">Layer 7 down through wireless, brain dumped into monkey terms.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">The Big Picture</div>
+    First half of 168 = how packets get from A to B (routing, transport). This half = what you actually do with that pipe. Look up names (<strong>DNS</strong>), grab pages (<strong>HTTP</strong>), get on the network (<strong>DHCP/ARP</strong>), hide your address (<strong>NAT</strong>), encrypt stuff (<strong>TLS</strong>), then zoom into datacenters, group communication, and wireless.
+  </div>
+
+  <h2>How to use this site</h2>
+  <p>Pick a section in the sidebar. Each one has: a TL;DR, the meat, diagrams, and any math/equations needed. Drag sliders in interactive demos. Don't read top-to-bottom — skip around.</p>
+
+  <h2>Stuff that comes up everywhere</h2>
+  <table>
+    <tr><th>Term</th><th>What it means (monkey version)</th></tr>
+    <tr><td><strong>Layer 2</strong></td><td>MAC addresses, Ethernet frames. Local network only.</td></tr>
+    <tr><td><strong>Layer 3</strong></td><td>IP addresses, routers. Goes across networks.</td></tr>
+    <tr><td><strong>Layer 4</strong></td><td>TCP/UDP. Ports, reliability, ordering.</td></tr>
+    <tr><td><strong>Layer 7</strong></td><td>Apps. HTTP, DNS, etc.</td></tr>
+    <tr><td><strong>Unicast</strong></td><td>Send to one machine.</td></tr>
+    <tr><td><strong>Broadcast</strong></td><td>Send to everyone on local net.</td></tr>
+    <tr><td><strong>Multicast</strong></td><td>Send to a group.</td></tr>
+    <tr><td><strong>Anycast</strong></td><td>Send to nearest of N copies sharing one IP.</td></tr>
+  </table>
+
+  <div class="callout blue">
+    <div class="label">Tip</div>
+    The sidebar follows the textbook section order exactly. If a topic feels missing, it might be combined into the next page (e.g. "DHCP servers" lives under §6 DHCP).
+  </div>
+</section>
+
+
+<!-- ═════════ §1 DNS ═════════ -->
+<section class="sec" id="dns">
+  <div class="section-header">
+    <div class="section-num">§ 1 · Applications</div>
+    <h1>DNS</h1>
+    <div class="lede">Names → IP addresses. The phonebook of the Internet.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Humans type <code>google.com</code>, computers need <code>172.217.4.174</code>. DNS translates. Tree of name servers, each owns a "zone." Query starts at root, walks down. Uses UDP port 53 because it needs to be fast.
+  </div>
+
+  <h2>Why we need it</h2>
+  <p>Old days: one big <code>hosts.txt</code> file passed around on paper. Doesn't scale. DNS (1983) replaced it with a distributed tree.</p>
+
+  <div class="def-box">
+    <div class="label">Design Goals</div>
+    <strong>Scalable</strong> (billions of names) · <strong>Fast</strong> (every connection starts with a lookup) · <strong>Highly available</strong> (no single point of failure)
+  </div>
+
+  <h2>The hierarchy</h2>
+  <p>Each name server only knows its own <strong>zone</strong>. Roots know about <code>.com</code>, <code>.edu</code>, etc. <code>.edu</code> servers know about <code>berkeley.edu</code>. Berkeley servers know about <code>eecs.berkeley.edu</code>. Tree structure.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .node { fill: #1f4e7a; }
+        .label-t { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #f4f1ea; }
+        .zone-t { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #6b7280; }
+        .edge { stroke: #b8a87a; stroke-width: 1.5; fill: none; }
+      </style>
+      <!-- Root -->
+      <rect class="node" x="270" y="10" width="60" height="28" rx="4"/>
+      <text class="label-t" x="300" y="29" text-anchor="middle">. (root)</text>
+      <!-- TLDs -->
+      <rect class="node" x="80" y="80" width="60" height="28" rx="4"/>
+      <text class="label-t" x="110" y="99" text-anchor="middle">.com</text>
+      <rect class="node" x="270" y="80" width="60" height="28" rx="4"/>
+      <text class="label-t" x="300" y="99" text-anchor="middle">.edu</text>
+      <rect class="node" x="460" y="80" width="60" height="28" rx="4"/>
+      <text class="label-t" x="490" y="99" text-anchor="middle">.org</text>
+      <line class="edge" x1="295" y1="38" x2="115" y2="80"/>
+      <line class="edge" x1="300" y1="38" x2="300" y2="80"/>
+      <line class="edge" x1="305" y1="38" x2="490" y2="80"/>
+      <!-- L2 -->
+      <rect class="node" x="180" y="150" width="80" height="28" rx="4"/>
+      <text class="label-t" x="220" y="169" text-anchor="middle">berkeley.edu</text>
+      <rect class="node" x="320" y="150" width="80" height="28" rx="4"/>
+      <text class="label-t" x="360" y="169" text-anchor="middle">stanford.edu</text>
+      <line class="edge" x1="295" y1="108" x2="220" y2="150"/>
+      <line class="edge" x1="305" y1="108" x2="360" y2="150"/>
+      <!-- L3 -->
+      <rect class="node" x="140" y="210" width="100" height="22" rx="4"/>
+      <text class="label-t" x="190" y="225" text-anchor="middle">eecs.berkeley.edu</text>
+      <line class="edge" x1="215" y1="178" x2="190" y2="210"/>
+      <text class="zone-t" x="10" y="20">root</text>
+      <text class="zone-t" x="10" y="95">TLD</text>
+      <text class="zone-t" x="10" y="165">2nd-level</text>
+    </svg>
+    <div class="caption">DNS name server hierarchy</div>
+  </div>
+
+  <h2>How a lookup works</h2>
+  <p>Query for <code>eecs.berkeley.edu</code>:</p>
+  <ol>
+    <li>Ask root → "I dunno, ask <code>.edu</code> server at IP X"</li>
+    <li>Ask <code>.edu</code> server → "I dunno, ask <code>berkeley.edu</code> server at IP Y"</li>
+    <li>Ask <code>berkeley.edu</code> server → "<code>eecs.berkeley.edu</code> = 23.185.0.1"</li>
+    <li>Cache it so you don't have to do this again.</li>
+  </ol>
+
+  <h2>Stub vs Recursive Resolver</h2>
+  <p>Your computer (<strong>stub resolver</strong>) doesn't actually walk the tree itself. It dumps the work on a <strong>recursive resolver</strong> (e.g. <code>1.1.1.1</code> Cloudflare, <code>8.8.8.8</code> Google, your home router, your ISP). The resolver walks the tree, caches everything, and serves you the answer. Bigger cache = more cache hits.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .box { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
+        .lbl { font-family: 'Inter', sans-serif; font-size: 11px; fill: #0d1117; }
+        .ar { stroke: #c9722c; stroke-width: 1.5; fill: none; marker-end: url(#arr); }
+        .arn { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #c9722c; }
+      </style>
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#c9722c"/>
+        </marker>
+      </defs>
+      <!-- You -->
+      <rect class="box" x="20" y="60" width="80" height="40" rx="4"/>
+      <text class="lbl" x="60" y="85" text-anchor="middle">You (stub)</text>
+      <!-- Resolver -->
+      <rect class="box" x="240" y="60" width="100" height="40" rx="4"/>
+      <text class="lbl" x="290" y="78" text-anchor="middle">Recursive</text>
+      <text class="lbl" x="290" y="93" text-anchor="middle">Resolver</text>
+      <!-- name servers -->
+      <rect class="box" x="470" y="10" width="100" height="30" rx="4"/>
+      <text class="lbl" x="520" y="29" text-anchor="middle">root</text>
+      <rect class="box" x="470" y="65" width="100" height="30" rx="4"/>
+      <text class="lbl" x="520" y="84" text-anchor="middle">.edu</text>
+      <rect class="box" x="470" y="120" width="100" height="30" rx="4"/>
+      <text class="lbl" x="520" y="139" text-anchor="middle">berkeley.edu</text>
+
+      <line class="ar" x1="100" y1="80" x2="240" y2="80"/>
+      <text class="arn" x="170" y="73" text-anchor="middle">1 query</text>
+
+      <line class="ar" x1="340" y1="75" x2="470" y2="25"/>
+      <line class="ar" x1="340" y1="80" x2="470" y2="80"/>
+      <line class="ar" x1="340" y1="85" x2="470" y2="135"/>
+      <text class="arn" x="380" y="115" text-anchor="middle">2 walks tree</text>
+
+      <line class="ar" x1="240" y1="92" x2="100" y2="92"/>
+      <text class="arn" x="170" y="105" text-anchor="middle">3 answer</text>
+    </svg>
+    <div class="caption">Stub resolver hands work to recursive resolver</div>
+  </div>
+
+  <h2>Why DNS uses UDP</h2>
+  <ul>
+    <li>Speed. No 3-way handshake.</li>
+    <li>Lightweight. No per-connection state on server.</li>
+    <li>Queries fit in one packet.</li>
+    <li>Lost packet? Retry. Easy.</li>
+  </ul>
+  <p>Exception: zone transfers (primary→secondary copy of all records) are big, so they use TCP. Port <strong>53</strong>.</p>
+
+  <h2>DNS message format</h2>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 130" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .field { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1; }
+        .field2 { fill: #ddd5be; stroke: #1f4e7a; stroke-width: 1; }
+        .ft { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
+        .fs { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #6b7280; }
+      </style>
+      <rect class="field" x="20" y="20" width="120" height="30"/>
+      <text class="ft" x="80" y="38" text-anchor="middle">ID (16b)</text>
+      <rect class="field" x="140" y="20" width="120" height="30"/>
+      <text class="ft" x="200" y="38" text-anchor="middle">Flags (16b)</text>
+      <rect class="field" x="260" y="20" width="80" height="30"/>
+      <text class="ft" x="300" y="34" text-anchor="middle"># Q</text>
+      <text class="fs" x="300" y="46" text-anchor="middle">always 1</text>
+      <rect class="field" x="340" y="20" width="80" height="30"/>
+      <text class="ft" x="380" y="38" text-anchor="middle"># Ans</text>
+      <rect class="field" x="420" y="20" width="80" height="30"/>
+      <text class="ft" x="460" y="38" text-anchor="middle"># Auth</text>
+      <rect class="field" x="500" y="20" width="80" height="30"/>
+      <text class="ft" x="540" y="38" text-anchor="middle"># Add</text>
+      <rect class="field2" x="20" y="60" width="560" height="55"/>
+      <text class="ft" x="300" y="85" text-anchor="middle">Question / Answer / Authority / Additional sections</text>
+      <text class="fs" x="300" y="100" text-anchor="middle">each = list of resource records (RRs)</text>
+    </svg>
+    <div class="caption">DNS packet structure</div>
+  </div>
+
+  <h2>Record types</h2>
+  <table class="kvtable">
+    <tr><th>Type</th><th>What it maps</th></tr>
+    <tr><td>A</td><td>domain → IPv4</td></tr>
+    <tr><td>AAAA</td><td>domain → IPv6</td></tr>
+    <tr><td>NS</td><td>zone → name server domain</td></tr>
+    <tr><td>CNAME</td><td>domain → another domain (alias)</td></tr>
+    <tr><td>MX</td><td>domain → mail server (with priority)</td></tr>
+    <tr><td>PTR</td><td>IP → domain (reverse lookup)</td></tr>
+  </table>
+  <p>Each record key is <code>&lt;Name, Class, Type&gt;</code>. Class is always <code>IN</code> (Internet). Each record value is <code>&lt;TTL, Value&gt;</code> — TTL = how long you can cache it.</p>
+
+  <h2>Sections in a response</h2>
+  <ul>
+    <li><strong>Question</strong>: what you asked (echoed back)</li>
+    <li><strong>Answer</strong>: the actual answer (if known)</li>
+    <li><strong>Authority</strong>: NS records — "ask these servers next"</li>
+    <li><strong>Additional</strong>: A records giving IPs of those NS servers (so you don't need another lookup just to find them)</li>
+  </ul>
+
+  <h2>Authority hierarchy (3 hierarchies in 1)</h2>
+  <ol>
+    <li><strong>Naming</strong>: <code>eecs.berkeley.edu</code> is hierarchical</li>
+    <li><strong>Infrastructure</strong>: name servers form a tree</li>
+    <li><strong>Authority</strong>: ICANN owns root → delegates to TLDs → who delegate to organizations</li>
+  </ol>
+  <p>ICANN runs root. TLDs (1500+ now, including <code>.pizza</code>) cost ~$150K to register. Domain name registrars sell zones to you.</p>
+
+  <h2>Anycast for root servers</h2>
+  <p>13 root server IPs are public/well-known. But each "server" is actually thousands of physical mirrors all advertising the same IP. Routing protocol picks closest one. If one fails, others still work. Same trick used for <code>8.8.8.8</code>.</p>
+
+  <h2>DNS for load balancing</h2>
+  <p>Name server can return multiple A records (client picks one) OR return different A records based on who asked / where. Used to send users to nearest CDN server.</p>
+
+  <div class="demo-panel">
+    <div class="demo-title">Interactive — Trace a DNS query</div>
+    <div class="controls">
+      <div class="ctrl-group">
+        <label>Domain</label>
+        <select id="dns-domain" onchange="traceDNS()" style="font-family:var(--mono);font-size:12px;padding:4px;">
+          <option>eecs.berkeley.edu</option>
+          <option>www.google.com</option>
+          <option>maps.stanford.edu</option>
+          <option>foo.bar.example.org</option>
+        </select>
+      </div>
+    </div>
+    <div id="dns-trace" style="font-family:var(--mono);font-size:12px;background:var(--paper);padding:.85rem 1rem;border-radius:4px;border:1px solid var(--rule);min-height:120px;"></div>
+  </div>
+</section>
+
+
+<!-- ═════════ §2 HTTP ═════════ -->
+<section class="sec" id="http">
+  <div class="section-header">
+    <div class="section-num">§ 2 · Applications</div>
+    <h1>HTTP</h1>
+    <div class="lede">Asks for stuff. Gets stuff. Plaintext over TCP. That's it.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Client-server. Request-response. Plaintext over TCP port 80 (HTTPS = 443). Methods (GET, POST...), URL, status codes, headers. Speed-ups: pipelining, caching, CDNs. Newer versions: HTTP/2 (multiplexing, push), HTTP/3 (over QUIC instead of TCP).
+  </div>
+
+  <h2>Basics</h2>
+  <ul>
+    <li><strong>Runs over TCP</strong>. Bytestream, no per-packet worries.</li>
+    <li><strong>Client-server</strong>. Server listens on port 80 (HTTPS: 443).</li>
+    <li><strong>Request-response</strong>. One req → one resp.</li>
+    <li><strong>Plaintext</strong>. You can literally <code>telnet google.com 80</code> and type HTTP.</li>
+  </ul>
+
+  <h2>Request</h2>
+  <pre>GET /index.html HTTP/1.1
+Host: google.com
+User-Agent: Firefox
+
+[optional body]</pre>
+  <p>Method · URL · Version · headers · body.</p>
+
+  <h2>Methods</h2>
+  <table>
+    <tr><th>Method</th><th>What it does</th></tr>
+    <tr><td><code>GET</code></td><td>Fetch a resource. No body usually.</td></tr>
+    <tr><td><code>POST</code></td><td>Send data to server (e.g. form submit).</td></tr>
+    <tr><td><code>PUT</code></td><td>Create/replace a resource.</td></tr>
+    <tr><td><code>HEAD</code></td><td>Like GET, but only headers, no body.</td></tr>
+    <tr><td><code>DELETE</code></td><td>Delete a resource.</td></tr>
+  </table>
+
+  <h2>Response</h2>
+  <pre>HTTP/1.1 200 OK
+Content-Type: text/html
+Date: Sat, 16 Mar 2024 18:33:08 GMT
+
+&lt;!doctype html&gt;...</pre>
+
+  <h2>Status codes</h2>
+  <table>
+    <tr><th>Range</th><th>Category</th><th>Examples</th></tr>
+    <tr><td>1xx</td><td>Info</td><td>100 Continue</td></tr>
+    <tr><td>2xx</td><td>Success</td><td>200 OK, 201 Created</td></tr>
+    <tr><td>3xx</td><td>Redirect</td><td>301 Moved Permanently, 302 Found</td></tr>
+    <tr><td>4xx</td><td>Your fault</td><td>400 Bad Req, 401 Unauthorized, 403 Forbidden, 404 Not Found</td></tr>
+    <tr><td>5xx</td><td>Server's fault</td><td>500 Internal Error, 503 Service Unavailable</td></tr>
+  </table>
+
+  <h2>Headers</h2>
+  <p>Metadata. Optional in HTTP/1.1.</p>
+  <table>
+    <tr><th>Header</th><th>Use</th></tr>
+    <tr><td><code>Host</code></td><td>Which website on the server (req)</td></tr>
+    <tr><td><code>User-Agent</code></td><td>Browser/client info (req)</td></tr>
+    <tr><td><code>Content-Type</code></td><td>HTML? JSON? image? (both)</td></tr>
+    <tr><td><code>Content-Encoding</code></td><td>gzip, etc.</td></tr>
+    <tr><td><code>Location</code></td><td>Where redirect points (resp)</td></tr>
+    <tr><td><code>Cache-Control</code></td><td>Caching rules</td></tr>
+  </table>
+
+  <h2>Pipelining</h2>
+  <p>Loading one page = many HTTP requests (HTML, images, video, etc.). Naive: open TCP, request, close, repeat. Slow.</p>
+  <p><strong>HTTP/1.1 pipelining</strong>: keep TCP open, send multiple req/resp on it. Downside: server holds more state.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .seg { stroke: #1f4e7a; stroke-width: 1.5; fill: none; }
+        .seg2 { stroke: #c9722c; stroke-width: 1.5; fill: none; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #6b7280; }
+        .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; font-weight: 600; }
+      </style>
+      <text class="lbl2" x="20" y="22">No pipelining</text>
+      <line class="seg" x1="20" y1="40" x2="20" y2="80"/>
+      <line class="seg" x1="20" y1="80" x2="120" y2="40"/>
+      <line class="seg" x1="120" y1="40" x2="160" y2="80"/>
+      <line class="seg" x1="160" y1="80" x2="200" y2="40"/>
+      <line class="seg" x1="200" y1="40" x2="240" y2="80"/>
+      <line class="seg" x1="240" y1="80" x2="340" y2="40"/>
+      <line class="seg" x1="340" y1="40" x2="380" y2="80"/>
+      <line class="seg" x1="380" y1="80" x2="420" y2="40"/>
+      <line class="seg" x1="420" y1="40" x2="460" y2="80"/>
+      <text class="lbl" x="20" y="95">Client</text>
+      <text class="lbl" x="455" y="35">Server (TCP+req+resp+TCP+req+resp...)</text>
+
+      <text class="lbl2" x="20" y="125">Pipelining</text>
+      <line class="seg2" x1="20" y1="140" x2="20" y2="170"/>
+      <line class="seg2" x1="20" y1="170" x2="80" y2="140"/>
+      <line class="seg2" x1="80" y1="140" x2="120" y2="170"/>
+      <line class="seg2" x1="120" y1="170" x2="160" y2="140"/>
+      <line class="seg2" x1="160" y1="140" x2="220" y2="170"/>
+      <line class="seg2" x1="220" y1="170" x2="280" y2="140"/>
+      <line class="seg2" x1="280" y1="140" x2="320" y2="170"/>
+      <line class="seg2" x1="320" y1="170" x2="380" y2="140"/>
+      <text class="lbl" x="20" y="170" dy="14">Client</text>
+      <text class="lbl" x="380" y="135">Same TCP, multiple req/resp</text>
+    </svg>
+    <div class="caption">Pipelining reuses one TCP connection</div>
+  </div>
+
+  <h2>Caching: 3 types</h2>
+  <table>
+    <tr><th>Type</th><th>Where</th><th>Who runs it</th><th>Shared?</th></tr>
+    <tr><td><strong>Private</strong></td><td>Your browser</td><td>You</td><td>No</td></tr>
+    <tr><td><strong>Proxy</strong></td><td>In network</td><td>ISP</td><td>Yes (multiple users)</td></tr>
+    <tr><td><strong>Managed</strong></td><td>In network</td><td>App provider</td><td>Yes</td></tr>
+  </table>
+  <div class="callout">
+    <div class="label">Note</div>
+    Static stuff (logos, videos) caches well. Dynamic (search results, your bank balance) doesn't. Sites mark with <code>Cache-Control</code> header: <code>private, max-age=86400</code> or <code>no-store</code>.
+  </div>
+
+  <h2>CDNs (Content Delivery Networks)</h2>
+  <p><strong>= managed caches deployed everywhere.</strong> Push servers close to users (geographically AND in network hops).</p>
+  <p>Wins:</p>
+  <ul>
+    <li>Faster for users (lower RTT → higher TCP throughput too)</li>
+    <li>Less ISP bandwidth needed</li>
+    <li>Origin server doesn't need to scale infinitely</li>
+    <li>Redundancy</li>
+  </ul>
+  <p>ISPs let CDNs (Google, Netflix) deploy boxes inside their network because it saves the ISP bandwidth on peering links. Win-win. Smaller apps pay Cloudflare/Akamai/Edgio to use their CDN.</p>
+
+  <div class="callout green">
+    <div class="label">Real Numbers (2023)</div>
+    Netflix = 15% of all Internet traffic. YouTube = 11.4%. Disney+ = 4.5%. ISPs hosting CDNs for those 3 alone can build 25% less network capacity.
+  </div>
+
+  <h2>How clients find the right CDN server</h2>
+  <table>
+    <tr><th>Method</th><th>How</th><th>Issue</th></tr>
+    <tr><td>Anycast</td><td>All servers same IP</td><td>Long TCP connections break if route changes mid-flow</td></tr>
+    <tr><td>DNS</td><td>Different IP per region</td><td>Resolver location ≠ user location → bad granularity</td></tr>
+    <tr><td>App-level</td><td>HTML links to <code>static1.x.com</code> vs <code>static2.x.com</code></td><td>Most flexible. Used in practice.</td></tr>
+  </table>
+
+  <h2>HTTP versions</h2>
+  <table>
+    <tr><th>Version</th><th>Year</th><th>What's new</th></tr>
+    <tr><td>0.9</td><td>1991</td><td>GET only</td></tr>
+    <tr><td>1.0</td><td>1996</td><td>Methods, headers, status codes</td></tr>
+    <tr><td>1.1</td><td>1997</td><td>Pipelining, Cache-Control</td></tr>
+    <tr><td>HTTPS</td><td>—</td><td>HTTP over TLS over TCP. Port 443.</td></tr>
+    <tr><td>2.0</td><td>2015</td><td>Server push, header compression, multiplexing, priorities</td></tr>
+    <tr><td>3.0</td><td>2022</td><td>Runs over <strong>QUIC</strong> (UDP-based) instead of TCP</td></tr>
+  </table>
+  <div class="callout red">
+    <div class="label">Layering Note</div>
+    HTTP/3 + QUIC intentionally violates clean layering — designers wanted to optimize transport+app together. Sometimes layering loses.
+  </div>
+</section>
+
+
+<!-- ═════════ §3 ETHERNET ═════════ -->
+<section class="sec" id="ethernet">
+  <div class="section-header">
+    <div class="section-num">§ 3 · End-to-End</div>
+    <h1>Ethernet</h1>
+    <div class="lede">Layer 2 inside a local network. Multiple machines on one wire.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Multiple computers on a shared wire. Need to (a) avoid collisions and (b) address each other. Solution: <strong>CSMA/CD</strong> + <strong>binary exponential backoff</strong> for collisions. <strong>MAC addresses</strong> (48-bit, burned into hardware) for addressing.
+  </div>
+
+  <h2>Shared media problem</h2>
+  <p>One wire, many computers. If two talk at once → signals collide → both garbled. Like everyone on a group call shouting at once.</p>
+
+  <h2>Three approaches to sharing</h2>
+  <table>
+    <tr><th>Category</th><th>How</th><th>Examples</th></tr>
+    <tr><td><strong>Fixed allocation</strong></td><td>Each node gets fixed slice</td><td>FDM (frequency), TDM (time)</td></tr>
+    <tr><td><strong>Take turns</strong></td><td>Coordinate who speaks</td><td>Polling (Bluetooth), Token passing (Token Ring)</td></tr>
+    <tr><td><strong>Random access</strong></td><td>Just talk, deal with collisions</td><td>ALOHA, Ethernet (CSMA/CD)</td></tr>
+  </table>
+  <div class="callout">
+    <div class="label">Why fixed allocation sucks</div>
+    Wastes resources when nobody's talking. Coordinated approaches need extra protocols → complexity. Random access is dumb but simple.
+  </div>
+
+  <h2>CSMA/CD</h2>
+  <p><strong>Carrier Sense Multiple Access / Collision Detection</strong>:</p>
+  <ol>
+    <li><strong>Listen first.</strong> If quiet, talk. (Carrier Sense)</li>
+    <li><strong>Listen while talking.</strong> If you hear noise, you collided — stop. (Collision Detection)</li>
+    <li><strong>Wait random time, retry.</strong></li>
+  </ol>
+  <p>Doesn't fully prevent collisions because of <strong>propagation delay</strong> — A starts talking, signal hasn't reached B yet, B hears silence and starts talking too.</p>
+
+  <h2>Binary exponential backoff</h2>
+  <p>Collision N times in a row → wait random time in <code>[0, 2^N]</code>. Few colliders → quick retry. Many colliders → spreads them out. Self-tuning.</p>
+
+  <div class="math-block">
+    \[ \text{wait} \sim \text{Uniform}(0, 2^N) \cdot \text{slot time} \]
+  </div>
+
+  <h2>ALOHANet (1968)</h2>
+  <p>Hawaii. First random-access wireless protocol. Hub uses dedicated frequency (no collisions sending out). Remotes share a frequency to send back (might collide). Inspired Ethernet.</p>
+
+  <h2>MAC addresses</h2>
+  <ul>
+    <li><strong>48 bits</strong>, hex: <code>f8:ff:c2:2b:36:16</code></li>
+    <li>Burned into hardware (NIC card)</li>
+    <li>Globally unique (mostly). First 22 bits = manufacturer, last 24 = device</li>
+    <li>Different from IP — MAC stays with the device, IP changes per network</li>
+  </ul>
+
+  <h2>Cast types</h2>
+  <table>
+    <tr><th>Type</th><th>Destination MAC</th><th>Who reads it</th></tr>
+    <tr><td><strong>Unicast</strong></td><td>Specific MAC</td><td>One machine</td></tr>
+    <tr><td><strong>Broadcast</strong></td><td><code>FF:FF:FF:FF:FF:FF</code></td><td>Everyone on link</td></tr>
+    <tr><td><strong>Multicast</strong></td><td>Group MAC (1st bit = 1)</td><td>Group members</td></tr>
+  </table>
+  <p>Note: <em>Everybody</em> on shared media physically gets every packet. Destination MAC just tells them whether to read or ignore.</p>
+
+  <h2>Ethernet frame</h2>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 110" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .f { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1; }
+        .fp { fill: #ddd5be; stroke: #1f4e7a; stroke-width: 1; }
+        .ft { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
+        .fs { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #6b7280; }
+      </style>
+      <rect class="f" x="20" y="30" width="60" height="40"/>
+      <text class="ft" x="50" y="48" text-anchor="middle">preamble</text>
+      <text class="fs" x="50" y="60" text-anchor="middle">7 B</text>
+      <rect class="f" x="80" y="30" width="100" height="40"/>
+      <text class="ft" x="130" y="48" text-anchor="middle">dest MAC</text>
+      <text class="fs" x="130" y="60" text-anchor="middle">6 B</text>
+      <rect class="f" x="180" y="30" width="100" height="40"/>
+      <text class="ft" x="230" y="48" text-anchor="middle">src MAC</text>
+      <text class="fs" x="230" y="60" text-anchor="middle">6 B</text>
+      <rect class="f" x="280" y="30" width="60" height="40"/>
+      <text class="ft" x="310" y="48" text-anchor="middle">type</text>
+      <text class="fs" x="310" y="60" text-anchor="middle">2 B</text>
+      <rect class="fp" x="340" y="30" width="180" height="40"/>
+      <text class="ft" x="430" y="48" text-anchor="middle">payload (IP packet)</text>
+      <rect class="f" x="520" y="30" width="60" height="40"/>
+      <text class="ft" x="550" y="48" text-anchor="middle">CRC</text>
+      <text class="fs" x="550" y="60" text-anchor="middle">4 B</text>
+    </svg>
+    <div class="caption">Ethernet frame structure</div>
+  </div>
+  <p>Type field = which Layer 3 protocol (IPv4 vs IPv6). CRC = checksum over whole frame.</p>
+
+  <div class="demo-panel">
+    <div class="demo-title">Interactive — Backoff window</div>
+    <div class="controls">
+      <div class="ctrl-group">
+        <label>Collisions in a row (N)</label>
+        <input type="range" id="bk-n" min="0" max="10" value="3" oninput="updateBackoff()">
+        <span class="val" id="bk-n-val">3</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="lbl">Window size</div><div class="val" id="bk-window">8</div></div>
+      <div class="stat"><div class="lbl">Avg wait (slots)</div><div class="val" id="bk-avg">4</div></div>
+      <div class="stat"><div class="lbl">Max wait (slots)</div><div class="val" id="bk-max">8</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ §4 STP ═════════ -->
+<section class="sec" id="stp">
+  <div class="section-header">
+    <div class="section-num">§ 4 · End-to-End</div>
+    <h1>Layer 2 Routing (STP)</h1>
+    <div class="lede">Make a tree out of switches so loops don't kill the network.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Multiple switches in L2 net → loops → broadcast storms (packets multiply forever). Solution: <strong>Spanning Tree Protocol (STP)</strong>. Pick a root switch, build a tree, disable any link not in the tree. Plus: <strong>learning switches</strong> auto-fill forwarding tables by watching source addresses.
+  </div>
+
+  <h2>Naive forwarding: flooding</h2>
+  <p>Switch gets packet, sends out every other port. Works, but wastes bandwidth and causes <strong>loops</strong>.</p>
+
+  <h2>Learning switches (smart flooding)</h2>
+  <p>Switch starts dumb. Sees packet "from A, in port 3." Learns: A is reachable via port 3. Adds to table. Future packets <em>to</em> A go out port 3 only — no flooding.</p>
+  <p>If destination unknown → flood. If known → unicast. Self-learning, no protocol needed.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .sw { fill: #1f4e7a; stroke: #0d1117; stroke-width: 1; }
+        .h { fill: #c9722c; stroke: #0d1117; stroke-width: 1; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #f4f1ea; }
+        .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #0d1117; }
+        .l { stroke: #6b7280; stroke-width: 1.5; }
+        .ldis { stroke: #a8362b; stroke-width: 1.5; stroke-dasharray: 4 3; }
+      </style>
+      <circle class="sw" cx="300" cy="40" r="22"/>
+      <text class="lbl" x="300" y="44" text-anchor="middle">root</text>
+      <circle class="sw" cx="180" cy="120" r="20"/>
+      <text class="lbl" x="180" y="124" text-anchor="middle">S2</text>
+      <circle class="sw" cx="420" cy="120" r="20"/>
+      <text class="lbl" x="420" y="124" text-anchor="middle">S3</text>
+      <circle class="sw" cx="300" cy="160" r="20"/>
+      <text class="lbl" x="300" y="164" text-anchor="middle">S4</text>
+      <line class="l" x1="282" y1="55" x2="195" y2="105"/>
+      <line class="l" x1="318" y1="55" x2="405" y2="105"/>
+      <line class="ldis" x1="195" y1="135" x2="282" y2="155"/>
+      <line class="l" x1="405" y1="135" x2="318" y2="155"/>
+      <text class="lbl2" x="240" y="90">tree edge</text>
+      <text class="lbl2" x="170" y="155" fill="#a8362b">disabled</text>
+    </svg>
+    <div class="caption">STP tree — red dashed link is disabled to break loop</div>
+  </div>
+
+  <h2>STP algorithm</h2>
+  <ol>
+    <li><strong>Elect a root.</strong> Lowest switch ID wins. Initially everyone claims to be root, then learns from neighbors.</li>
+    <li><strong>Each switch finds shortest path to root.</strong></li>
+    <li><strong>Each link picks one designated forwarder.</strong> Switch with shortest path to root.</li>
+    <li><strong>Disable everything else.</strong> Now it's a tree.</li>
+  </ol>
+
+  <h2>BPDU exchanges</h2>
+  <p>Switches exchange <strong>BPDUs (Bridge Protocol Data Units)</strong>: <code>(root_id, distance_to_root, my_id)</code>. A BPDU is "better" if (lower root id) OR (same root, lower distance) OR (same root and dist, lower my_id).</p>
+  <p>Switches keep best BPDU heard on each port. Use that to decide port states.</p>
+
+  <h2>Port states</h2>
+  <table>
+    <tr><th>State</th><th>Meaning</th></tr>
+    <tr><td><strong>Root port</strong></td><td>Closest port to root (one per non-root switch)</td></tr>
+    <tr><td><strong>Designated</strong></td><td>This switch is the elected forwarder for the link</td></tr>
+    <tr><td><strong>Disabled</strong></td><td>Don't forward — break the loop</td></tr>
+  </table>
+</section>
+
+<!-- ═════════ §5 ARP ═════════ -->
+<section class="sec" id="arp">
+  <div class="section-header">
+    <div class="section-num">§ 5 · End-to-End</div>
+    <h1>ARP — Address Resolution Protocol</h1>
+    <div class="lede">"You have IP X. What's your MAC?"</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    To send an IP packet inside your local net, you need the destination's MAC address. ARP figures it out: <strong>broadcast</strong> "who has IP X?", target <strong>unicasts</strong> back its MAC. Cache result in ARP table.
+  </div>
+
+  <h2>The problem</h2>
+  <p>Layer 3 says "send to IP <code>192.0.2.5</code>." But to actually send the Ethernet frame, you need the destination's MAC. How do you find it?</p>
+
+  <h2>The protocol</h2>
+  <ol>
+    <li>Check forwarding table: is dest IP in my subnet? If yes, send to dest. If no, send to default gateway router.</li>
+    <li>Need MAC of dest (or gateway). Don't have it cached? <strong>Broadcast</strong>: "who has IP X? I'm at MAC <code>aa:bb:cc</code>"</li>
+    <li>Target sees broadcast, recognizes own IP, <strong>unicasts</strong> reply: "I'm IP X, MAC <code>11:22:33</code>"</li>
+    <li>Cache in <strong>ARP table</strong> with expiry.</li>
+  </ol>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .h { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
+        .arr { stroke: #c9722c; stroke-width: 1.5; fill: none; marker-end: url(#arr2); }
+        .arr2 { stroke: #4a6b3a; stroke-width: 1.5; fill: none; marker-end: url(#arr3); }
+        .at { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #6b7280; }
+      </style>
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker>
+        <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6b3a"/></marker>
+      </defs>
+      <rect class="h" x="20" y="60" width="100" height="50" rx="4"/>
+      <text class="lbl" x="70" y="80" text-anchor="middle">A (sender)</text>
+      <text class="at" x="70" y="95" text-anchor="middle">IP 192.0.2.5</text>
+
+      <rect class="h" x="240" y="20" width="100" height="40" rx="4"/>
+      <text class="lbl" x="290" y="44" text-anchor="middle">B</text>
+      <rect class="h" x="240" y="80" width="100" height="40" rx="4"/>
+      <text class="lbl" x="290" y="98" text-anchor="middle">target (192.0.2.7)</text>
+      <rect class="h" x="240" y="140" width="100" height="35" rx="4"/>
+      <text class="lbl" x="290" y="162" text-anchor="middle">C</text>
+
+      <line class="arr" x1="120" y1="80" x2="240" y2="40"/>
+      <line class="arr" x1="120" y1="85" x2="240" y2="100"/>
+      <line class="arr" x1="120" y1="90" x2="240" y2="155"/>
+      <text class="at" x="180" y="35">1. broadcast "who has 192.0.2.7?"</text>
+
+      <line class="arr2" x1="240" y1="100" x2="120" y2="105"/>
+      <text class="at" x="180" y="130" fill="#4a6b3a">2. unicast "I'm 192.0.2.7, MAC=…"</text>
+    </svg>
+    <div class="caption">ARP: broadcast question, unicast answer</div>
+  </div>
+
+  <h2>ARP table</h2>
+  <p>Cache of IP↔MAC mappings, with TTL (entries expire because IPs can be reassigned).</p>
+
+  <h2>IPv6 equivalent</h2>
+  <p>IPv6 doesn't use ARP. It uses <strong>Neighbor Discovery</strong> (NDP) — same idea, runs over ICMPv6 instead of being its own protocol.</p>
+</section>
+
+
+<!-- ═════════ §6 DHCP ═════════ -->
+<section class="sec" id="dhcp">
+  <div class="section-header">
+    <div class="section-num">§ 6 · End-to-End</div>
+    <h1>DHCP — Joining a Network</h1>
+    <div class="lede">Plug in. Auto-configure. 4 packets. Done.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    New device knows nothing about the local net. DHCP gives it: an IP address, subnet mask, default gateway IP, DNS server IP. <strong>4-step protocol: Discover → Offer → Request → Ack (DORA)</strong>.
+  </div>
+
+  <h2>What you need to learn</h2>
+  <ul>
+    <li><strong>Your IP address</strong> (assigned to you)</li>
+    <li><strong>Subnet mask</strong> (which IPs are local)</li>
+    <li><strong>Default gateway IP</strong> (where to send non-local traffic)</li>
+    <li><strong>DNS resolver IP</strong></li>
+  </ul>
+  <p>You always know your own MAC (burned in).</p>
+
+  <h2>DORA — the 4 steps</h2>
+  <ol>
+    <li><strong>Discover</strong>: client <em>broadcasts</em> "anyone able to configure me?"</li>
+    <li><strong>Offer</strong>: DHCP server <em>unicasts</em> back a config (IP, mask, gateway, DNS)</li>
+    <li><strong>Request</strong>: client <em>broadcasts</em> "I accept offer X" (broadcast so other servers know to free up their offers)</li>
+    <li><strong>Ack</strong>: server confirms</li>
+  </ol>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .b { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #0d1117; }
+        .arr { stroke: #c9722c; stroke-width: 1.5; fill: none; marker-end: url(#arr-d); }
+        .arr2 { stroke: #4a6b3a; stroke-width: 1.5; fill: none; marker-end: url(#arr-d2); }
+        .num { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #c9722c; font-weight: 600; }
+      </style>
+      <defs>
+        <marker id="arr-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker>
+        <marker id="arr-d2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a6b3a"/></marker>
+      </defs>
+      <rect class="b" x="40" y="20" width="100" height="30"/>
+      <text class="lbl" x="90" y="40" text-anchor="middle">client</text>
+      <rect class="b" x="40" y="150" width="100" height="30"/>
+      <text class="lbl" x="90" y="170" text-anchor="middle">client</text>
+      <rect class="b" x="460" y="20" width="100" height="30"/>
+      <text class="lbl" x="510" y="40" text-anchor="middle">DHCP server</text>
+      <rect class="b" x="460" y="150" width="100" height="30"/>
+      <text class="lbl" x="510" y="170" text-anchor="middle">DHCP server</text>
+
+      <line class="arr" x1="140" y1="40" x2="460" y2="55"/>
+      <text class="num" x="300" y="55" text-anchor="middle">1. Discover (broadcast)</text>
+
+      <line class="arr2" x1="460" y1="80" x2="140" y2="95"/>
+      <text class="num" x="300" y="95" text-anchor="middle">2. Offer (unicast)</text>
+
+      <line class="arr" x1="140" y1="120" x2="460" y2="135"/>
+      <text class="num" x="300" y="135" text-anchor="middle">3. Request (broadcast)</text>
+
+      <line class="arr2" x1="460" y1="165" x2="140" y2="170"/>
+      <text class="num" x="300" y="180" text-anchor="middle">4. Ack</text>
+    </svg>
+    <div class="caption">DORA</div>
+  </div>
+
+  <h2>Server</h2>
+  <p>Home network: home router IS the DHCP server. Larger networks: dedicated DHCP server. Must be on same subnet (or use DHCP relay).</p>
+
+  <h2>IPv6 Autoconfiguration</h2>
+  <p>IPv6 hosts can self-assign an IP using their MAC + the network prefix (advertised by router). No DHCP needed — though DHCPv6 still exists for extra config.</p>
+</section>
+
+<!-- ═════════ §7 NAT ═════════ -->
+<section class="sec" id="nat">
+  <div class="section-header">
+    <div class="section-num">§ 7 · End-to-End</div>
+    <h1>NAT — Network Address Translation</h1>
+    <div class="lede">Many private IPs hide behind one public IP.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    IPv4 only has \(2^{32}\) addresses — not enough. NAT lets a whole local network (with private IPs like <code>192.168.x.x</code>) share <strong>one public IP</strong>. Router rewrites src IP+port on outgoing packets, remembers the mapping, undoes it on replies.
+  </div>
+
+  <h2>Why NAT exists</h2>
+  <p>IPv4 addresses ran out. IPv6 is the real fix but adoption is slow. Private IP ranges (<a><code>10.0.0.0/8</code>, <code>172.16.0.0/12</code>, <code>192.168.0.0/16</code></a>) are not globally routable — anyone can use them locally. NAT bridges the gap.</p>
+
+  <h2>How it works</h2>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .h { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
+        .r { fill: #1f4e7a; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
+        .lblw { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #f4f1ea; }
+        .arr { stroke: #c9722c; stroke-width: 1.4; fill: none; marker-end: url(#arn); }
+        .pkt { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #c9722c; }
+      </style>
+      <defs>
+        <marker id="arn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker>
+      </defs>
+      <rect class="h" x="20" y="80" width="80" height="35"/>
+      <text class="lbl" x="60" y="100" text-anchor="middle">Alice</text>
+      <text class="lbl" x="60" y="112" text-anchor="middle">10.0.0.1</text>
+
+      <rect class="r" x="240" y="80" width="100" height="35" rx="4"/>
+      <text class="lblw" x="290" y="98" text-anchor="middle">NAT router</text>
+      <text class="lblw" x="290" y="110" text-anchor="middle">public: 1.2.3.4</text>
+
+      <rect class="h" x="480" y="80" width="80" height="35"/>
+      <text class="lbl" x="520" y="100" text-anchor="middle">Server</text>
+      <text class="lbl" x="520" y="112" text-anchor="middle">5.6.7.8</text>
+
+      <line class="arr" x1="100" y1="90" x2="240" y2="90"/>
+      <text class="pkt" x="170" y="80" text-anchor="middle">From: 10.0.0.1:55555</text>
+      <text class="pkt" x="170" y="135" text-anchor="middle">To: 5.6.7.8:80</text>
+
+      <line class="arr" x1="340" y1="90" x2="480" y2="90"/>
+      <text class="pkt" x="410" y="80" text-anchor="middle">From: 1.2.3.4:6000</text>
+      <text class="pkt" x="410" y="135" text-anchor="middle">To: 5.6.7.8:80</text>
+
+      <text class="lbl" x="290" y="165" text-anchor="middle">NAT table:</text>
+      <text class="lbl" x="290" y="180" text-anchor="middle">10.0.0.1:55555 ↔ 1.2.3.4:6000</text>
+    </svg>
+    <div class="caption">NAT rewrites source IP + port</div>
+  </div>
+
+  <h2>Why ports too?</h2>
+  <p>Multiple internal hosts might use the same source port (e.g. both pick 55555). NAT remaps to unique public ports so replies can be demultiplexed back to the right host.</p>
+
+  <p>NAT entry: <code>(internal IP, internal port) ↔ (public IP, public port)</code></p>
+
+  <h2>Where NAT lives</h2>
+  <ul>
+    <li>Home router (super common)</li>
+    <li>Enterprise networks</li>
+    <li>Carrier-grade NAT (CGN/CGNAT) at ISPs — multiple customers share one public IP</li>
+  </ul>
+
+  <h2>Inbound connection problem</h2>
+  <p>External hosts can't initiate connections to internal hosts — NAT has no entry yet. Workarounds: <strong>port forwarding</strong> (manual entry), <strong>UPnP</strong> (apps configure NAT), <strong>STUN/TURN/ICE</strong> (NAT traversal for video calls/games).</p>
+
+  <h2>Security side effect</h2>
+  <p>Inbound-blocking is accidentally a firewall. NAT gets credit for "security" but mostly it's just a side effect. Real security needs real firewalls.</p>
+</section>
+
+<!-- ═════════ §8 TLS ═════════ -->
+<section class="sec" id="tls">
+  <div class="section-header">
+    <div class="section-num">§ 8 · End-to-End</div>
+    <h1>TLS — Secure Bytestreams</h1>
+    <div class="lede">Encrypts TCP. Sits between TCP and HTTP. Layer 4.5.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Raw TCP is naked — anyone on the path reads/edits your packets. Bad for banks. <strong>TLS</strong> (Transport Layer Security) sits on top of TCP, exchanges keys via a handshake, encrypts everything. <strong>HTTPS = HTTP over TLS over TCP, port 443.</strong>
+  </div>
+
+  <h2>What TCP doesn't protect</h2>
+  <ul>
+    <li><strong>Confidentiality.</strong> Anyone on path reads your data.</li>
+    <li><strong>Integrity.</strong> Anyone can modify packets.</li>
+    <li><strong>Authentication.</strong> You might be talking to attacker (DNS spoofing, etc.) instead of real bank.</li>
+  </ul>
+
+  <h2>Where TLS sits</h2>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .l { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1.5; }
+        .l2 { fill: #ddd5be; stroke: #1f4e7a; stroke-width: 1.5; }
+        .ll { font-family: 'JetBrains Mono', monospace; font-size: 12px; fill: #0d1117; font-weight: 600; }
+        .lt { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; fill: #6b7280; }
+      </style>
+      <rect class="l" x="180" y="20" width="240" height="32"/>
+      <text class="ll" x="300" y="40" text-anchor="middle">L7 — HTTP</text>
+      <rect class="l2" x="180" y="62" width="240" height="32"/>
+      <text class="ll" x="300" y="82" text-anchor="middle">L4.5 — TLS</text>
+      <text class="lt" x="425" y="82">encrypts bytestream</text>
+      <rect class="l" x="180" y="104" width="240" height="32"/>
+      <text class="ll" x="300" y="124" text-anchor="middle">L4 — TCP</text>
+      <rect class="l" x="180" y="146" width="240" height="32"/>
+      <text class="ll" x="300" y="166" text-anchor="middle">L3 — IP</text>
+      <rect class="l" x="180" y="188" width="240" height="32"/>
+      <text class="ll" x="300" y="208" text-anchor="middle">L2 — Ethernet</text>
+    </svg>
+    <div class="caption">TLS = Layer "4.5"</div>
+  </div>
+  <p>TLS uses TCP's bytestream abstraction (no per-packet thinking) and gives apps the same bytestream — but encrypted. So HTTP doesn't change at all when you wrap it in TLS.</p>
+
+  <h2>TLS handshake</h2>
+  <ol>
+    <li><strong>TCP 3-way handshake</strong> happens first (TLS runs over TCP)</li>
+    <li><strong>Client Hello / Server Hello</strong>: exchange random nonces, agree on crypto algorithms</li>
+    <li><strong>Server certificate</strong>: server sends signed cert (proves it's the real server, validated by CA chain)</li>
+    <li><strong>Key exchange</strong>: client+server derive shared secret over the still-unencrypted channel (using e.g. Diffie-Hellman or RSA)</li>
+    <li><strong>Derive session keys</strong> from shared secret + nonces. Done locally, never transmitted.</li>
+    <li><strong>Finished messages</strong> (encrypted) confirm both sides match.</li>
+  </ol>
+
+  <div class="callout">
+    <div class="label">Why nonces?</div>
+    Nonces are random numbers from each side. They make sure every session derives a different key — even if same long-term keys.
+  </div>
+
+  <h2>HTTPS</h2>
+  <table>
+    <tr><th></th><th>HTTP</th><th>HTTPS</th></tr>
+    <tr><td>Port</td><td>80</td><td>443</td></tr>
+    <tr><td>Stack</td><td>HTTP / TCP / IP</td><td>HTTP / TLS / TCP / IP</td></tr>
+  </table>
+  <p>2024: 85%+ of websites default to HTTPS. Servers can force upgrade by 301-redirecting all port-80 requests to port 443.</p>
+</section>
+
+
+<!-- ═════════ §9 E2E ═════════ -->
+<section class="sec" id="e2e">
+  <div class="section-header">
+    <div class="section-num">§ 9 · End-to-End</div>
+    <h1>End-to-End Walkthrough</h1>
+    <div class="lede">You plug in. You type a URL. What happens?</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Plug in laptop → DHCP for config → ARP for router MAC → DNS for site IP → TCP handshake → (TLS handshake) → HTTP request → page loads. Every protocol from this whole course shows up.
+  </div>
+
+  <h2>Step 1: DHCP (join network)</h2>
+  <p>Broadcast Discover. Get Offer with: your IP, subnet mask, gateway IP, DNS resolver IP. Confirm with Request, get Ack.</p>
+
+  <h2>Step 2: ARP (find router MAC)</h2>
+  <p>Verify gateway IP is in your subnet. Broadcast ARP "who has gateway IP?" Router replies with its MAC. Cache it.</p>
+
+  <h2>Step 3: DNS (find site IP)</h2>
+  <p>Build DNS packet from top down:</p>
+  <table>
+    <tr><th>Layer</th><th>Headers added</th></tr>
+    <tr><td>L7 DNS</td><td>Question: A record for <code>www.berkeley.edu</code></td></tr>
+    <tr><td>L4 UDP</td><td>src port: random; dst port: 53</td></tr>
+    <tr><td>L3 IP</td><td>src: your IP (DHCP); dst: resolver IP (DHCP)</td></tr>
+    <tr><td>L2 Ethernet</td><td>src MAC: yours; dst MAC: router's (ARP)</td></tr>
+  </table>
+  <p>(If NAT'd: router rewrites src IP+port to public on the way out.) Resolver walks the tree, returns A record.</p>
+
+  <h2>Step 4: TCP + (TLS) + HTTP</h2>
+  <ol>
+    <li>TCP handshake to <code>berkeley.edu:443</code> (SYN, SYN-ACK, ACK)</li>
+    <li>TLS handshake (Hello, cert, key exchange, finished)</li>
+    <li>HTTP GET <code>/</code></li>
+    <li>HTTP response with HTML</li>
+    <li>Browser parses, requests CSS/JS/images (more HTTP, possibly to CDN)</li>
+  </ol>
+
+  <h2>Sockets</h2>
+  <p>OS abstraction for a connection. Tuple <code>(src_ip, src_port, dst_ip, dst_port, proto)</code>. <code>socket()</code>, <code>connect()</code>, <code>send()</code>, <code>recv()</code>.</p>
+
+  <h2>Layers in OS</h2>
+  <ul>
+    <li><strong>Browser</strong> (user space): HTTP, TLS</li>
+    <li><strong>OS kernel</strong>: TCP, IP, ARP, routing tables</li>
+    <li><strong>NIC driver / hardware</strong>: Ethernet, physical signals</li>
+  </ul>
+
+  <h2>Viewing packets</h2>
+  <p>Tools: <code>tcpdump</code>, <code>Wireshark</code>. They show every packet on the wire.</p>
+
+  <h2>Layering revisited</h2>
+  <p>Layering is mostly clean but has cracks: NAT (router messes with L4 ports), TLS (semi-layer), HTTP/3 over QUIC (intentional violation for performance).</p>
+</section>
+
+<!-- ═════════ §10 DC TOPO ═════════ -->
+<section class="sec" id="dc-topo">
+  <div class="section-header">
+    <div class="section-num">§ 10 · Datacenters</div>
+    <h1>Datacenter Topologies</h1>
+    <div class="lede">Build huge networks of servers. Use trees of trees.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    YouTube ≠ one server, it's a building of servers. Datacenter networks are different: one operator, homogeneous gear, lots of east-west traffic. Use <strong>Clos / fat-tree topologies</strong> to provide full bisection bandwidth.
+  </div>
+
+  <h2>What's a datacenter</h2>
+  <ul>
+    <li>One building of servers, owned by one organization (Google, AWS)</li>
+    <li>Hosts applications (YouTube, Gmail, etc.)</li>
+    <li>Different from carrier hotels (which connect networks)</li>
+    <li>Located near rivers/power, not cities</li>
+  </ul>
+
+  <h2>Why DCs are different</h2>
+  <table>
+    <tr><th>Property</th><th>DC</th><th>Wide-area Internet</th></tr>
+    <tr><td>Operator</td><td>One</td><td>Many ISPs</td></tr>
+    <tr><td>Hardware</td><td>Homogeneous</td><td>Mixed</td></tr>
+    <tr><td>Distance</td><td>Same building</td><td>Continents</td></tr>
+    <tr><td>Propagation delay</td><td>Tiny</td><td>Large</td></tr>
+    <tr><td>Queuing delay</td><td>Dominant</td><td>Often small</td></tr>
+    <tr><td>Custom protocols</td><td>Yes — operator controls everything</td><td>Need standards</td></tr>
+  </table>
+
+  <h2>Traffic patterns: mice and elephants</h2>
+  <ul>
+    <li><strong>Mice</strong>: small, latency-sensitive. e.g. web search query.</li>
+    <li><strong>Elephants</strong>: big, throughput-sensitive. e.g. backup, data shuffle.</li>
+  </ul>
+
+  <h2>Racks</h2>
+  <p>~40 servers in a vertical rack. <strong>Top-of-Rack (ToR) switch</strong> connects them. Then ToRs connect to higher-level switches. Then those to higher levels. Tree structure.</p>
+
+  <h2>Bisection bandwidth</h2>
+  <p>Cut network in half. Total bandwidth across the cut = bisection bandwidth. <strong>Full bisection</strong> = any server can talk to any other at full speed.</p>
+  <div class="math-block">
+    \[ \text{full bisection} \iff \forall \text{ traffic patterns, no oversubscription} \]
+  </div>
+
+  <h2>Clos topology / Fat-tree</h2>
+  <p>Multiple layers of switches. Each lower switch connects to <em>multiple</em> upper switches. More links higher up = wider "fat" tree. Provides multiple paths between any pair.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .core { fill: #1f4e7a; }
+        .agg { fill: #2d5a7a; }
+        .tor { fill: #4a6b3a; }
+        .srv { fill: #c9722c; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #f4f1ea; }
+        .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #6b7280; }
+        .l { stroke: #b8a87a; stroke-width: 1; }
+      </style>
+      <!-- Core -->
+      <rect class="core" x="240" y="10" width="40" height="22" rx="3"/>
+      <text class="lbl" x="260" y="25" text-anchor="middle">core</text>
+      <rect class="core" x="320" y="10" width="40" height="22" rx="3"/>
+      <text class="lbl" x="340" y="25" text-anchor="middle">core</text>
+      <!-- Agg -->
+      <rect class="agg" x="80" y="70" width="40" height="22" rx="3"/>
+      <rect class="agg" x="180" y="70" width="40" height="22" rx="3"/>
+      <rect class="agg" x="380" y="70" width="40" height="22" rx="3"/>
+      <rect class="agg" x="480" y="70" width="40" height="22" rx="3"/>
+      <text class="lbl" x="100" y="85" text-anchor="middle">agg</text>
+      <text class="lbl" x="200" y="85" text-anchor="middle">agg</text>
+      <text class="lbl" x="400" y="85" text-anchor="middle">agg</text>
+      <text class="lbl" x="500" y="85" text-anchor="middle">agg</text>
+      <!-- ToR -->
+      <rect class="tor" x="50" y="130" width="40" height="22" rx="3"/>
+      <rect class="tor" x="120" y="130" width="40" height="22" rx="3"/>
+      <rect class="tor" x="190" y="130" width="40" height="22" rx="3"/>
+      <rect class="tor" x="370" y="130" width="40" height="22" rx="3"/>
+      <rect class="tor" x="440" y="130" width="40" height="22" rx="3"/>
+      <rect class="tor" x="510" y="130" width="40" height="22" rx="3"/>
+      <text class="lbl" x="70" y="145" text-anchor="middle">ToR</text>
+      <text class="lbl" x="140" y="145" text-anchor="middle">ToR</text>
+      <text class="lbl" x="210" y="145" text-anchor="middle">ToR</text>
+      <text class="lbl" x="390" y="145" text-anchor="middle">ToR</text>
+      <text class="lbl" x="460" y="145" text-anchor="middle">ToR</text>
+      <text class="lbl" x="530" y="145" text-anchor="middle">ToR</text>
+      <!-- Servers -->
+      <g fill="#c9722c">
+        <rect x="50" y="180" width="12" height="20"/><rect x="65" y="180" width="12" height="20"/><rect x="80" y="180" width="12" height="20"/>
+        <rect x="120" y="180" width="12" height="20"/><rect x="135" y="180" width="12" height="20"/><rect x="150" y="180" width="12" height="20"/>
+        <rect x="190" y="180" width="12" height="20"/><rect x="205" y="180" width="12" height="20"/><rect x="220" y="180" width="12" height="20"/>
+        <rect x="370" y="180" width="12" height="20"/><rect x="385" y="180" width="12" height="20"/><rect x="400" y="180" width="12" height="20"/>
+        <rect x="440" y="180" width="12" height="20"/><rect x="455" y="180" width="12" height="20"/><rect x="470" y="180" width="12" height="20"/>
+        <rect x="510" y="180" width="12" height="20"/><rect x="525" y="180" width="12" height="20"/><rect x="540" y="180" width="12" height="20"/>
+      </g>
+      <!-- core to agg (multipath) -->
+      <line class="l" x1="260" y1="32" x2="100" y2="70"/>
+      <line class="l" x1="260" y1="32" x2="200" y2="70"/>
+      <line class="l" x1="260" y1="32" x2="400" y2="70"/>
+      <line class="l" x1="260" y1="32" x2="500" y2="70"/>
+      <line class="l" x1="340" y1="32" x2="100" y2="70"/>
+      <line class="l" x1="340" y1="32" x2="200" y2="70"/>
+      <line class="l" x1="340" y1="32" x2="400" y2="70"/>
+      <line class="l" x1="340" y1="32" x2="500" y2="70"/>
+      <!-- agg to tor -->
+      <line class="l" x1="100" y1="92" x2="70" y2="130"/>
+      <line class="l" x1="100" y1="92" x2="140" y2="130"/>
+      <line class="l" x1="100" y1="92" x2="210" y2="130"/>
+      <line class="l" x1="200" y1="92" x2="70" y2="130"/>
+      <line class="l" x1="200" y1="92" x2="140" y2="130"/>
+      <line class="l" x1="200" y1="92" x2="210" y2="130"/>
+      <line class="l" x1="400" y1="92" x2="390" y2="130"/>
+      <line class="l" x1="400" y1="92" x2="460" y2="130"/>
+      <line class="l" x1="400" y1="92" x2="530" y2="130"/>
+      <line class="l" x1="500" y1="92" x2="390" y2="130"/>
+      <line class="l" x1="500" y1="92" x2="460" y2="130"/>
+      <line class="l" x1="500" y1="92" x2="530" y2="130"/>
+      <text class="lbl2" x="20" y="190">servers</text>
+    </svg>
+    <div class="caption">3-tier fat-tree (Clos) — many paths between any two servers</div>
+  </div>
+</section>
+
+<!-- ═════════ §11 DC CC ═════════ -->
+<section class="sec" id="dc-cc">
+  <div class="section-header">
+    <div class="section-num">§ 11 · Datacenters</div>
+    <h1>Datacenter Congestion Control</h1>
+    <div class="lede">Standard TCP fills queues. In DCs that's bad. Use ECN signals.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Standard TCP detects congestion via packet loss → it fills queues until they overflow. Mice get stuck behind elephants in those queues. Solution: <strong>DCTCP</strong> uses ECN bits to signal early congestion. <strong>pFabric</strong> assigns priorities so mice cut the line.
+  </div>
+
+  <h2>Why DC needs different CC</h2>
+  <ul>
+    <li>Propagation delay is tiny → queuing delay dominates</li>
+    <li>Mice can't afford to wait behind elephants in a full queue</li>
+    <li>Operator controls all switches → can deploy custom protocol</li>
+  </ul>
+
+  <h2>DCTCP (Microsoft, 2010)</h2>
+  <p>Routers set <strong>ECN bit</strong> when queue length > threshold (not when full). Receiver echoes ECN to sender. Sender reduces rate <strong>proportionally</strong> to fraction of marked packets — gentle, not all-or-nothing.</p>
+  <div class="callout">
+    <div class="label">FCT — Flow Completion Time</div>
+    Metric for DC CC. Time from first byte sent to last byte received. Compare to ideal omniscient scheduler. DCTCP gets close to ideal; standard TCP is 3-10× worse.
+  </div>
+
+  <h2>BBR (Google, 2016)</h2>
+  <p>Detect congestion by measuring delay (not loss). Don't fill queues at all.</p>
+
+  <h2>pFabric — packet priorities</h2>
+  <p>Each packet stamped with priority = remaining flow size. Mice = high priority (small flow size). Elephants = low priority. Switch's queue is sorted by priority, so mice always get served first. Tail of an elephant flow naturally promotes itself as size remaining decreases.</p>
+</section>
+
+<!-- ═════════ §12 DC ROUTING ═════════ -->
+<section class="sec" id="dc-routing">
+  <div class="section-header">
+    <div class="section-num">§ 12 · Datacenters</div>
+    <h1>Datacenter Routing</h1>
+    <div class="lede">Many equal paths. Use them all. Simple.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Fat-tree has many equal-cost paths between any two servers. Use <strong>ECMP (Equal-Cost Multi-Path)</strong> — hash flow's 5-tuple, pick a path. Per-flow balanced, all packets in a flow stay on one path (so no reordering).
+  </div>
+
+  <h2>ECMP</h2>
+  <p>Switch has multiple equal-cost next hops. For each packet:</p>
+  <div class="math-block">
+    \[ \text{next hop} = \text{hash}(\text{src ip, dst ip, src port, dst port, proto}) \mod N \]
+  </div>
+  <p>Same flow → same hash → same path → no reordering. Different flows → different paths → load balanced.</p>
+
+  <h2>Problem: hash collisions</h2>
+  <p>Two big elephants might hash to same path → that path becomes congested even though others are idle.</p>
+  <p>Fix: <strong>flowlet switching</strong> — split a flow at gaps in transmission, rebalance per flowlet (still avoids most reordering).</p>
+
+  <h2>Why not BGP-style?</h2>
+  <p>DCs use IGP-like protocols (OSPF, IS-IS) or custom variants. Sometimes <strong>BGP</strong> is even used internally because it scales well and supports policy. But basics are similar to what you saw earlier.</p>
+</section>
+
+<!-- ═════════ §13 DC ADDR ═════════ -->
+<section class="sec" id="dc-addr">
+  <div class="section-header">
+    <div class="section-num">§ 13 · Datacenters</div>
+    <h1>Datacenter Addressing</h1>
+    <div class="lede">Servers move. Hardware breaks. Addresses can't be permanent.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Two types of addresses: <strong>locator</strong> (where you are in the network — for routing) and <strong>identifier</strong> (who you are — for the app). Separate them so VMs can move without breaking connections.
+  </div>
+
+  <h2>Why standard addressing fails</h2>
+  <p>IP addresses double as both locator (used for routing) AND identifier (used by apps). Move a VM to a new rack → new IP → existing TCP connections break.</p>
+
+  <h2>Solution: indirection</h2>
+  <p>Each server has:</p>
+  <ul>
+    <li><strong>Identifier</strong>: stable, used by apps</li>
+    <li><strong>Locator</strong>: changes when server moves, used for routing</li>
+  </ul>
+  <p>Lookup table maps identifier → current locator. When server moves, update table, identifier stays.</p>
+
+  <h2>Implementation</h2>
+  <p>Usually done via <strong>encapsulation</strong>: outer header has locator, inner has identifier. Common protocols: VXLAN, GENEVE.</p>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 100" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .h { fill: #ebe6d8; stroke: #1f4e7a; stroke-width: 1; }
+        .h2 { fill: #ddd5be; stroke: #1f4e7a; stroke-width: 1; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #0d1117; }
+      </style>
+      <rect class="h" x="20" y="30" width="120" height="40"/>
+      <text class="lbl" x="80" y="48" text-anchor="middle">outer L3</text>
+      <text class="lbl" x="80" y="62" text-anchor="middle">(locator IPs)</text>
+      <rect class="h2" x="140" y="30" width="120" height="40"/>
+      <text class="lbl" x="200" y="48" text-anchor="middle">VXLAN hdr</text>
+      <text class="lbl" x="200" y="62" text-anchor="middle">(VNI)</text>
+      <rect class="h" x="260" y="30" width="160" height="40"/>
+      <text class="lbl" x="340" y="48" text-anchor="middle">inner L2/L3</text>
+      <text class="lbl" x="340" y="62" text-anchor="middle">(identifier addrs)</text>
+      <rect class="h2" x="420" y="30" width="160" height="40"/>
+      <text class="lbl" x="500" y="48" text-anchor="middle">payload</text>
+    </svg>
+    <div class="caption">VXLAN: tunnel inner packet inside outer IP header</div>
+  </div>
+</section>
+
+
+<!-- ═════════ §14 DC VIRT ═════════ -->
+<section class="sec" id="dc-virt">
+  <div class="section-header">
+    <div class="section-num">§ 14 · Datacenters</div>
+    <h1>Virtualization</h1>
+    <div class="lede">One physical server, many tenants. Network must keep them apart.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Cloud = one physical machine runs multiple VMs/containers, often for different customers. Network must isolate them (a tenant's traffic shouldn't leak), give each its own address space, and let VMs migrate. Solved with overlays (VXLAN, etc.) and virtual switches.
+  </div>
+
+  <h2>Tenant isolation</h2>
+  <p>Two AWS customers might both use <code>10.0.0.1</code> internally. Network must keep their packets separate. Solution: encapsulate each tenant's packets in an outer header tagged with a tenant ID.</p>
+
+  <h2>Overlay networks</h2>
+  <p><strong>Underlay</strong> = physical network (real IPs, real switches). <strong>Overlay</strong> = virtual network on top (each tenant sees their own private "network"). VXLAN's <code>VNI</code> (Virtual Network Identifier, 24 bits) tags which overlay a packet belongs to.</p>
+
+  <h2>Virtual switches</h2>
+  <p>Software switch on hypervisor (e.g. Open vSwitch). Sits between VMs and physical NIC. Does encapsulation, ACLs, etc. Programmable.</p>
+
+  <h2>VM migration</h2>
+  <p>VM moves from rack A to rack B. With identifier/locator separation, VM keeps its identifier (TCP connections survive). Just update mapping table.</p>
+</section>
+
+<!-- ═════════ §15 SDN ═════════ -->
+<section class="sec" id="sdn">
+  <div class="section-header">
+    <div class="section-num">§ 15 · Datacenters</div>
+    <h1>Software-Defined Networking (SDN)</h1>
+    <div class="lede">Move the brain out of the routers. One central controller decides. Routers just forward.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Old way: every router runs distributed routing protocols (BGP, OSPF), figures out routes itself. New way (SDN): a <strong>centralized controller</strong> tells routers exactly what to do via an API (e.g. <strong>OpenFlow</strong>). Routers become dumb forwarders. Used heavily in datacenters and Google's WAN (B4).
+  </div>
+
+  <h2>Traditional vs SDN</h2>
+  <table>
+    <tr><th></th><th>Traditional</th><th>SDN</th></tr>
+    <tr><td>Control plane</td><td>Distributed in routers</td><td>Centralized controller</td></tr>
+    <tr><td>Data plane</td><td>Routers</td><td>Routers (still)</td></tr>
+    <tr><td>Decisions</td><td>Each router decides</td><td>Controller decides globally</td></tr>
+    <tr><td>Flexibility</td><td>Fixed protocols</td><td>Custom logic in software</td></tr>
+  </table>
+
+  <h2>Disaggregating routers</h2>
+  <p>Router = hardware (forwarding tables, ASICs) + software (routing protocols). SDN splits them. Hardware stays in box. Software ("control plane") moves to centralized server. Talk to router via API.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .ctrl { fill: #1f4e7a; }
+        .sw { fill: #4a6b3a; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #f4f1ea; }
+        .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #6b7280; }
+        .l { stroke: #c9722c; stroke-width: 1.5; stroke-dasharray: 4 3; }
+      </style>
+      <rect class="ctrl" x="240" y="20" width="120" height="40" rx="5"/>
+      <text class="lbl" x="300" y="40" text-anchor="middle">Controller</text>
+      <text class="lbl" x="300" y="53" text-anchor="middle">(software)</text>
+
+      <rect class="sw" x="60" y="130" width="80" height="32" rx="4"/>
+      <text class="lbl" x="100" y="150" text-anchor="middle">switch</text>
+      <rect class="sw" x="180" y="130" width="80" height="32" rx="4"/>
+      <text class="lbl" x="220" y="150" text-anchor="middle">switch</text>
+      <rect class="sw" x="340" y="130" width="80" height="32" rx="4"/>
+      <text class="lbl" x="380" y="150" text-anchor="middle">switch</text>
+      <rect class="sw" x="460" y="130" width="80" height="32" rx="4"/>
+      <text class="lbl" x="500" y="150" text-anchor="middle">switch</text>
+
+      <line class="l" x1="300" y1="60" x2="100" y2="130"/>
+      <line class="l" x1="300" y1="60" x2="220" y2="130"/>
+      <line class="l" x1="300" y1="60" x2="380" y2="130"/>
+      <line class="l" x1="300" y1="60" x2="500" y2="130"/>
+
+      <text class="lbl2" x="180" y="100">OpenFlow API (install rules)</text>
+      <text class="lbl2" x="120" y="180">forwarding tables managed remotely</text>
+    </svg>
+    <div class="caption">SDN — central controller programs all switches</div>
+  </div>
+
+  <h2>OpenFlow</h2>
+  <p>The API. Lets controller install <strong>flow rules</strong> in switches: <code>match (header fields) → action (forward, drop, modify)</code>.</p>
+
+  <h2>Wins</h2>
+  <ul>
+    <li><strong>Globally optimal routing</strong> — controller sees whole network</li>
+    <li><strong>Traffic engineering</strong> — explicit control over which paths get used</li>
+    <li><strong>Easy to add features</strong> — change software, not protocols</li>
+    <li><strong>Custom logic per network</strong> — DC vs WAN can do totally different things</li>
+  </ul>
+
+  <h2>Where it's used</h2>
+  <ul>
+    <li>DC overlays (VXLAN tunnel management)</li>
+    <li>DC underlays (some operators)</li>
+    <li>Google B4 (their WAN connecting datacenters) — full SDN</li>
+  </ul>
+
+  <h2>Drawbacks</h2>
+  <ul>
+    <li>Single point of failure (need redundant controllers)</li>
+    <li>Latency to controller for new flows</li>
+    <li>Doesn't fit the open Internet (no central authority)</li>
+  </ul>
+</section>
+
+<!-- ═════════ §16 HOST NETWORKING ═════════ -->
+<section class="sec" id="host-net">
+  <div class="section-header">
+    <div class="section-num">§ 16 · Datacenters</div>
+    <h1>Host Networking</h1>
+    <div class="lede">CPU was doing networking. Now it's NIC's job.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    At 100 Gbps, the kernel's TCP/IP stack is a CPU bottleneck. Solutions: <strong>kernel bypass</strong> (DPDK, RDMA — let apps talk to NIC directly), <strong>SmartNICs</strong> (NICs with their own CPUs that handle networking). Programmable hardware is the trend.
+  </div>
+
+  <h2>The problem</h2>
+  <p>OS kernel processes every packet — copies, system calls, interrupts, TCP state. At high rates this eats most of the CPU. Wasteful.</p>
+
+  <h2>Kernel bypass</h2>
+  <p>Apps map the NIC's memory directly. Skip the kernel. Frameworks: <strong>DPDK</strong> (Data Plane Development Kit), <strong>netmap</strong>.</p>
+
+  <h2>RDMA — Remote DMA</h2>
+  <p>Direct memory access from one machine's RAM to another's, with no CPU involvement on the target. Used heavily in HPC and AI training (Infiniband, RoCE).</p>
+
+  <h2>SmartNICs / DPUs</h2>
+  <p>NIC contains its own programmable CPU/FPGA. Offload work: encryption, virtualization, encapsulation, compression. Examples: NVIDIA BlueField, AWS Nitro, Intel IPU.</p>
+
+  <h2>P4 — programmable data plane</h2>
+  <p>Language for describing packet processing in switches. Compile to ASIC. Lets you customize the data plane, not just the control plane.</p>
+</section>
+
+<!-- ═════════ §17 MULTICAST INTRO ═════════ -->
+<section class="sec" id="multicast">
+  <div class="section-header">
+    <div class="section-num">§ 17 · Beyond Client-Server</div>
+    <h1>Multicast</h1>
+    <div class="lede">Send one packet to a group. Network duplicates as needed.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Most Internet traffic is unicast (1 sender → 1 receiver). But some apps want group communication: live streaming, multiplayer games, video calls, AI training. <strong>Multicast</strong> = send once, network replicates. Two flavors: <strong>IP multicast</strong> (network does it) and <strong>overlay multicast</strong> (apps do it).
+  </div>
+
+  <h2>Why not just unicast N times?</h2>
+  <p>Wastes bandwidth. Live-stream to 1M viewers? That's 1M copies on the sender's link. Bad.</p>
+
+  <h2>Use cases</h2>
+  <ul>
+    <li>Live video / TV streaming</li>
+    <li>Multiplayer games (state updates)</li>
+    <li>Video conferencing (Zoom)</li>
+    <li>Collaborative docs (Google Docs)</li>
+    <li>Service discovery (Apple's mDNS)</li>
+    <li>AI training (gradient sync across GPUs)</li>
+  </ul>
+
+  <h2>IP vs Overlay Multicast</h2>
+  <table>
+    <tr><th></th><th>IP Multicast</th><th>Overlay</th></tr>
+    <tr><td>Where</td><td>Routers</td><td>End hosts / app</td></tr>
+    <tr><td>Efficient?</td><td>Most efficient</td><td>Less (data crosses some links twice)</td></tr>
+    <tr><td>Adoption</td><td>Hard — needs every router to cooperate</td><td>Easy — just deploy app</td></tr>
+    <tr><td>Used today</td><td>Inside private networks</td><td>Wide Internet (Zoom, etc.)</td></tr>
+  </table>
+</section>
+
+<!-- ═════════ §18 IP MULTICAST ═════════ -->
+<section class="sec" id="ip-multicast">
+  <div class="section-header">
+    <div class="section-num">§ 18 · Beyond Client-Server</div>
+    <h1>IP Multicast</h1>
+    <div class="lede">Service model: send to a group address. Routers handle delivery.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Reserve a special IP range (<code>224.0.0.0/4</code>) for "groups." Senders send to a group address. Receivers <strong>join</strong> a group. Routers build a tree to deliver packets to all members. Anyone can send to any group; anyone can join.
+  </div>
+
+  <h2>Service model</h2>
+  <ul>
+    <li>Class D IP range: <code>224.0.0.0</code> – <code>239.255.255.255</code></li>
+    <li>Sender: just send a packet with destination = group address</li>
+    <li>Receiver: tell local router "I want to join group G" via <strong>IGMP</strong></li>
+    <li>Open membership — anyone can join, anyone can send</li>
+  </ul>
+
+  <h2>What routers must do</h2>
+  <p>Build a <strong>distribution tree</strong> rooted at the source (or some shared point), reaching every receiver. Forward each packet down the tree (one copy per branch).</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .src { fill: #c9722c; }
+        .r { fill: #1f4e7a; }
+        .h { fill: #4a6b3a; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #f4f1ea; }
+        .l { stroke: #b8a87a; stroke-width: 1.5; }
+        .pkt { stroke: #c9722c; stroke-width: 2; fill: none; marker-end: url(#mc-arr); }
+      </style>
+      <defs><marker id="mc-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker></defs>
+      <rect class="src" x="20" y="80" width="60" height="30" rx="3"/>
+      <text class="lbl" x="50" y="100" text-anchor="middle">sender</text>
+      <circle class="r" cx="180" cy="95" r="20"/>
+      <text class="lbl" x="180" y="99" text-anchor="middle">R1</text>
+      <circle class="r" cx="320" cy="50" r="20"/>
+      <text class="lbl" x="320" y="54" text-anchor="middle">R2</text>
+      <circle class="r" cx="320" cy="140" r="20"/>
+      <text class="lbl" x="320" y="144" text-anchor="middle">R3</text>
+      <rect class="h" x="450" y="20" width="60" height="25" rx="3"/>
+      <text class="lbl" x="480" y="38" text-anchor="middle">A</text>
+      <rect class="h" x="450" y="60" width="60" height="25" rx="3"/>
+      <text class="lbl" x="480" y="78" text-anchor="middle">B</text>
+      <rect class="h" x="450" y="120" width="60" height="25" rx="3"/>
+      <text class="lbl" x="480" y="138" text-anchor="middle">C</text>
+      <rect class="h" x="450" y="160" width="60" height="25" rx="3"/>
+      <text class="lbl" x="480" y="178" text-anchor="middle">D</text>
+
+      <line class="pkt" x1="80" y1="95" x2="160" y2="95"/>
+      <line class="pkt" x1="200" y1="85" x2="300" y2="55"/>
+      <line class="pkt" x1="200" y1="105" x2="300" y2="135"/>
+      <line class="pkt" x1="340" y1="50" x2="450" y2="33"/>
+      <line class="pkt" x1="340" y1="50" x2="450" y2="73"/>
+      <line class="pkt" x1="340" y1="140" x2="450" y2="133"/>
+      <line class="pkt" x1="340" y1="140" x2="450" y2="173"/>
+    </svg>
+    <div class="caption">Multicast distribution tree — one packet per link</div>
+  </div>
+
+  <h2>IGMP</h2>
+  <p>Internet Group Management Protocol. Hosts tell their <em>local</em> router which groups they want to join/leave. Local router then propagates this info to other routers via the multicast routing protocol (DVMRP, PIM, etc.).</p>
+</section>
+
+<!-- ═════════ §19 DVMRP ═════════ -->
+<section class="sec" id="dvmrp">
+  <div class="section-header">
+    <div class="section-num">§ 19 · Beyond Client-Server</div>
+    <h1>DVMRP</h1>
+    <div class="lede">Source-rooted trees. Flood, then prune.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Distance Vector Multicast Routing Protocol. Builds a separate tree <strong>per source</strong> using <strong>RPF (Reverse Path Forwarding)</strong> + flood-and-prune. Wasteful but works for dense groups.
+  </div>
+
+  <h2>RPF — Reverse Path Forwarding</h2>
+  <p>Router sees multicast packet from source S. Should it forward?</p>
+  <ul>
+    <li>Find the unicast path back to S</li>
+    <li>If the packet arrived on the interface I'd use to reach S → forward (it's on the shortest path)</li>
+    <li>Otherwise → drop (it's a duplicate via a non-tree path)</li>
+  </ul>
+  <p>This automatically builds a tree rooted at S, no extra protocol needed.</p>
+
+  <h2>Flood and prune</h2>
+  <ol>
+    <li><strong>Flood</strong> first packet via RPF to all routers</li>
+    <li>Routers with no group members downstream send <strong>prune</strong> back up</li>
+    <li>Tree is pruned to only branches with members</li>
+    <li>Periodically refresh (in case new members joined)</li>
+  </ol>
+
+  <div class="callout red">
+    <div class="label">Problem</div>
+    Flooding wastes bandwidth. Tree per source = O(sources × groups) state in routers. Doesn't scale.
+  </div>
+</section>
+
+<!-- ═════════ §20 CBT ═════════ -->
+<section class="sec" id="cbt">
+  <div class="section-header">
+    <div class="section-num">§ 20 · Beyond Client-Server</div>
+    <h1>Core-Based Trees (CBT)</h1>
+    <div class="lede">One shared tree per group. Pick a "core" router as the rendezvous point.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Instead of per-source tree (DVMRP), build one tree per group rooted at a chosen <strong>core</strong>. Senders send to core; core distributes. Less router state, but core can be a bottleneck and paths may be suboptimal.
+  </div>
+
+  <h2>How it works</h2>
+  <ol>
+    <li>Pick a core router for group G</li>
+    <li>Each receiver sends "join G" toward core; routers along the way add themselves to the tree</li>
+    <li>Sender sends to core; core forwards down the tree</li>
+  </ol>
+
+  <h2>Tradeoffs vs DVMRP</h2>
+  <table>
+    <tr><th></th><th>DVMRP</th><th>CBT</th></tr>
+    <tr><td>Tree</td><td>Per source</td><td>Per group (shared)</td></tr>
+    <tr><td>State in routers</td><td>O(S × G)</td><td>O(G)</td></tr>
+    <tr><td>Path optimality</td><td>Best (shortest)</td><td>Goes via core (suboptimal)</td></tr>
+    <tr><td>Setup</td><td>Flood + prune</td><td>Receiver-driven join</td></tr>
+    <tr><td>Best for</td><td>Dense groups</td><td>Sparse groups</td></tr>
+  </table>
+
+  <h2>PIM</h2>
+  <p><strong>Protocol-Independent Multicast</strong> — modern hybrid. <strong>PIM-DM</strong> like DVMRP (dense). <strong>PIM-SM</strong> like CBT (sparse). PIM-SM is what's actually used.</p>
+</section>
+
+<!-- ═════════ §21 MULTICAST CHALLENGES ═════════ -->
+<section class="sec" id="mc-challenges">
+  <div class="section-header">
+    <div class="section-num">§ 21 · Beyond Client-Server</div>
+    <h1>IP Multicast Challenges</h1>
+    <div class="lede">Why IP multicast never took off on the public Internet.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    IP multicast technically works but failed to deploy widely. Issues: <strong>everyone must cooperate</strong>, <strong>no congestion control</strong>, <strong>billing is hard</strong>, <strong>no security</strong> (anyone can join/send), <strong>hard to provide reliability</strong>. Apps moved to overlays instead.
+  </div>
+
+  <h2>The core problems</h2>
+  <ul>
+    <li><strong>All routers must support it.</strong> The Internet has no central authority — can't force everyone to deploy IP multicast.</li>
+    <li><strong>Congestion control.</strong> TCP doesn't work for multicast (acks from millions of receivers? no thanks). UDP doesn't congestion-control.</li>
+    <li><strong>Reliability.</strong> What does "reliable delivery to a group" even mean?</li>
+    <li><strong>Billing.</strong> ISPs can't easily charge per packet — one packet might fan out to millions of customers.</li>
+    <li><strong>Security.</strong> Anyone can spam a group. Anyone can join and snoop.</li>
+    <li><strong>State explosion.</strong> Routers track all active groups.</li>
+  </ul>
+
+  <h2>Where it survives</h2>
+  <ul>
+    <li>Inside enterprise/private networks (e.g. ISP-internal IPTV)</li>
+    <li>Datacenter networks (controlled environment)</li>
+    <li>Local networks (mDNS / Bonjour)</li>
+  </ul>
+  <p>Public Internet group communication moved to <strong>overlay multicast</strong>.</p>
+</section>
+
+
+<!-- ═════════ §22 OVERLAY MULTICAST ═════════ -->
+<section class="sec" id="overlay-mc">
+  <div class="section-header">
+    <div class="section-num">§ 22 · Beyond Client-Server</div>
+    <h1>Overlay Multicast</h1>
+    <div class="lede">Build the tree at the application layer using unicast.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Don't ask routers for help. End hosts (or app-deployed servers) build their own tree using regular TCP/UDP. Less efficient than IP multicast (some links carry packets twice), but easier to deploy. Used by Zoom, live-streaming, etc.
+  </div>
+
+  <h2>How</h2>
+  <p>Sender unicasts to a few "branch" hosts. Each branch unicasts to more. Tree formed at app layer. Network sees only unicast traffic.</p>
+
+  <h2>Stretch and stress</h2>
+  <ul>
+    <li><strong>Stretch</strong>: ratio of overlay path length to ideal path length. Overlay ≥ 1, IP multicast = 1.</li>
+    <li><strong>Stress</strong>: number of times a packet crosses a single physical link. Overlay can be > 1; IP multicast = 1.</li>
+  </ul>
+  <div class="math-block">
+    \[ \text{stretch} = \frac{\text{overlay path length}}{\text{shortest path length}}, \quad \text{stress}(\ell) = \#\{\text{packet copies on link } \ell\} \]
+  </div>
+
+  <h2>Examples</h2>
+  <ul>
+    <li><strong>CDNs</strong> for live video — sender pushes to CDN, CDN fans out to viewers</li>
+    <li><strong>Zoom / video conferencing</strong> — central server forwards streams</li>
+    <li><strong>BitTorrent</strong> — peer-to-peer overlay</li>
+  </ul>
+</section>
+
+<!-- ═════════ §23 COLLECTIVE OPS ═════════ -->
+<section class="sec" id="collective">
+  <div class="section-header">
+    <div class="section-num">§ 23 · Beyond Client-Server</div>
+    <h1>Collective Operations</h1>
+    <div class="lede">Group communication primitives for AI training.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    AI training = thousands of GPUs need to sync results constantly. Standard ops: <strong>broadcast, scatter, gather, reduce, all-reduce, all-gather</strong>. Network performance often matters more than compute.
+  </div>
+
+  <h2>Why this is networking</h2>
+  <p>Modern AI: train one model across many GPUs. Each GPU does some math, then needs to share results. The "share results" step = collective communication = network problem.</p>
+
+  <h2>Distributed training types</h2>
+  <ul>
+    <li><strong>Data parallelism</strong>: each GPU has full model, different data slice. Sync gradients.</li>
+    <li><strong>Model parallelism</strong>: model split across GPUs. Pass activations between.</li>
+    <li><strong>Pipeline parallelism</strong>: layers split, micro-batches pipelined.</li>
+  </ul>
+
+  <h2>The collectives</h2>
+  <table>
+    <tr><th>Op</th><th>What it does</th></tr>
+    <tr><td><strong>Broadcast</strong></td><td>One node's data → all nodes</td></tr>
+    <tr><td><strong>Scatter</strong></td><td>One node's array → split across nodes</td></tr>
+    <tr><td><strong>Gather</strong></td><td>Each node's piece → assembled at one node</td></tr>
+    <tr><td><strong>Reduce</strong></td><td>All nodes' values → combined (sum, max, …) at one node</td></tr>
+    <tr><td><strong>All-reduce</strong></td><td>All nodes' values → combined → all nodes get result</td></tr>
+    <tr><td><strong>All-gather</strong></td><td>All nodes' pieces → all nodes get full array</td></tr>
+  </table>
+
+  <h2>Duals</h2>
+  <p>Operations come in pairs that reverse each other:</p>
+  <ul>
+    <li>Broadcast ↔ Reduce</li>
+    <li>Scatter ↔ Gather</li>
+  </ul>
+
+  <h2>Composition</h2>
+  <p>All-reduce = reduce + broadcast. All-gather = gather + broadcast. Building blocks compose.</p>
+</section>
+
+<!-- ═════════ §24 COLLECTIVE IMPL ═════════ -->
+<section class="sec" id="coll-impl">
+  <div class="section-header">
+    <div class="section-num">§ 24 · Beyond Client-Server</div>
+    <h1>Collective Implementations</h1>
+    <div class="lede">How to actually do all-reduce fast on N GPUs.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Naive: send everything to one node, combine, broadcast. Slow. Better: <strong>tree-based</strong> reduce/broadcast: O(log N) steps. Best for big arrays: <strong>ring all-reduce</strong> — every node sends/receives at full bandwidth simultaneously.
+  </div>
+
+  <h2>Naive all-reduce</h2>
+  <p>Everyone sends to node 0. Node 0 combines. Broadcasts result. Total time = O(N · M) where M = data size. Bottleneck: node 0's link.</p>
+
+  <h2>Tree-based</h2>
+  <p>Pair up nodes. Each pair → one combines. Repeat with combined values. Like a tournament bracket. \( O(\log N) \) steps. But each step still moves whole array.</p>
+
+  <h2>Ring all-reduce</h2>
+  <p>Arrange N nodes in a ring. Split data into N chunks. Each step, each node passes one chunk to its neighbor. After N-1 steps everyone has the full reduced array.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .n { fill: #1f4e7a; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #f4f1ea; }
+        .arr { stroke: #c9722c; stroke-width: 2; fill: none; marker-end: url(#ring-arr); }
+      </style>
+      <defs><marker id="ring-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9722c"/></marker></defs>
+      <circle class="n" cx="300" cy="40" r="22"/><text class="lbl" x="300" y="45" text-anchor="middle">G0</text>
+      <circle class="n" cx="430" cy="90" r="22"/><text class="lbl" x="430" y="95" text-anchor="middle">G1</text>
+      <circle class="n" cx="430" cy="170" r="22"/><text class="lbl" x="430" y="175" text-anchor="middle">G2</text>
+      <circle class="n" cx="300" cy="200" r="22"/><text class="lbl" x="300" y="205" text-anchor="middle">G3</text>
+      <circle class="n" cx="170" cy="170" r="22"/><text class="lbl" x="170" y="175" text-anchor="middle">G4</text>
+      <circle class="n" cx="170" cy="90" r="22"/><text class="lbl" x="170" y="95" text-anchor="middle">G5</text>
+      <path class="arr" d="M 320 50 Q 380 50 410 80"/>
+      <path class="arr" d="M 432 113 Q 450 145 432 148"/>
+      <path class="arr" d="M 410 180 Q 380 200 320 200"/>
+      <path class="arr" d="M 280 200 Q 220 200 190 180"/>
+      <path class="arr" d="M 168 148 Q 150 110 168 105"/>
+      <path class="arr" d="M 190 80 Q 220 50 280 50"/>
+    </svg>
+    <div class="caption">Ring all-reduce — every node sends + receives simultaneously</div>
+  </div>
+
+  <h2>Why ring is great</h2>
+  <p>Each node sends and receives at full link bandwidth simultaneously. Total time independent of N (for large data). Bandwidth-optimal.</p>
+  <div class="math-block">
+    \[ T_{\text{ring}} \approx 2(N-1) \cdot \frac{M/N}{B} \approx \frac{2M}{B} \quad \text{(ignoring latency)} \]
+  </div>
+  <p>where M = total data, B = link bandwidth, N = nodes. Time approaches \(2M/B\) regardless of N.</p>
+
+  <h2>NCCL, RCCL</h2>
+  <p>NVIDIA's NCCL (CUDA) and AMD's RCCL implement these collectives, picking algorithms based on topology and message size.</p>
+</section>
+
+<!-- ═════════ §25 WIRELESS ═════════ -->
+<section class="sec" id="wireless">
+  <div class="section-header">
+    <div class="section-num">§ 25 · Wireless</div>
+    <h1>Wireless Links</h1>
+    <div class="lede">No wires. Shared radio. CSMA/CD doesn't work.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Wireless is shared medium but with extra problems: <strong>can't detect collisions</strong> (your own signal drowns out others), signal <strong>attenuates with distance</strong> (\(1/r^2\) free space), and the <strong>environment changes</strong> (people walking, weather). Solution: <strong>CSMA/CA</strong> with RTS/CTS instead of CSMA/CD. WiFi (802.11) uses MACA / MACAW.
+  </div>
+
+  <h2>Why wireless is harder</h2>
+  <ul>
+    <li><strong>Can't detect collisions.</strong> Your own transmission swamps your receiver — can't hear if anyone else is talking.</li>
+    <li><strong>Attenuation.</strong> Signal weakens with distance. Two senders may be too far to hear each other but both reach the receiver (hidden terminal).</li>
+    <li><strong>Interference.</strong> Microwaves, other WiFi, walls, weather.</li>
+    <li><strong>Environments change.</strong> Moving people, obstacles, multipath reflection.</li>
+  </ul>
+
+  <h2>Free space path loss</h2>
+  <div class="math-block">
+    \[ P_{\text{rx}} = P_{\text{tx}} \cdot \left(\frac{\lambda}{4\pi r}\right)^2 \]
+  </div>
+  <p>Power received drops as \(1/r^2\) in free space. In real environments, often closer to \(1/r^4\) due to ground reflections.</p>
+
+  <h2>Link budget</h2>
+  <p>Sum of gains − losses must exceed receiver sensitivity. Decides max range.</p>
+
+  <h2>Hidden terminal problem</h2>
+  <p>A and C can both reach B, but can't hear each other. Both transmit to B → collision at B. Standard CSMA fails because A doesn't sense C.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <style>
+        .n { fill: #1f4e7a; }
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #f4f1ea; }
+        .lbl2 { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: #6b7280; }
+        .ring { fill: none; stroke: #c9722c; stroke-width: 1; stroke-dasharray: 4 3; opacity: .6; }
+      </style>
+      <circle class="ring" cx="100" cy="90" r="120"/>
+      <circle class="ring" cx="500" cy="90" r="120"/>
+      <circle class="n" cx="100" cy="90" r="22"/><text class="lbl" x="100" y="95" text-anchor="middle">A</text>
+      <circle class="n" cx="300" cy="90" r="22"/><text class="lbl" x="300" y="95" text-anchor="middle">B</text>
+      <circle class="n" cx="500" cy="90" r="22"/><text class="lbl" x="500" y="95" text-anchor="middle">C</text>
+      <text class="lbl2" x="100" y="160" text-anchor="middle">A's range</text>
+      <text class="lbl2" x="500" y="160" text-anchor="middle">C's range</text>
+      <text class="lbl2" x="300" y="40" text-anchor="middle">A and C don't hear each other → both think B is free → collision at B</text>
+    </svg>
+    <div class="caption">Hidden terminal</div>
+  </div>
+
+  <h2>CSMA/CA</h2>
+  <p><strong>Collision Avoidance</strong> — try not to collide instead of detecting collisions.</p>
+
+  <h2>MACA — RTS/CTS</h2>
+  <ol>
+    <li>A wants to send to B. A sends <strong>RTS</strong> (Request To Send) to B.</li>
+    <li>B replies with <strong>CTS</strong> (Clear To Send). Anyone who hears the CTS knows to be quiet.</li>
+    <li>A sends data. C heard B's CTS, so C stays quiet. No collision at B.</li>
+  </ol>
+
+  <h2>MACAW additions</h2>
+  <ul>
+    <li><strong>ACK</strong> — link-layer acknowledgement (because wireless drops a lot)</li>
+    <li><strong>Better backoff</strong> — fairer when many compete</li>
+    <li><strong>DS / RRTS</strong> — handle exposed terminals and synchronization</li>
+  </ul>
+
+  <h2>Exposed terminal</h2>
+  <p>Opposite problem: B is sending to A. C wants to send to D. C hears B → CSMA says don't transmit. But C→D wouldn't actually collide with B→A. C unnecessarily defers.</p>
+</section>
+
+<!-- ═════════ §26 CELLULAR ═════════ -->
+<section class="sec" id="cellular">
+  <div class="section-header">
+    <div class="section-num">§ 26 · Wireless</div>
+    <h1>Cellular</h1>
+    <div class="lede">Phone networks. Coordinated, infrastructure-based. Different from WiFi.</div>
+  </div>
+
+  <div class="tldr">
+    <div class="label">TL;DR</div>
+    Geography divided into <strong>cells</strong>, each served by a base station. Phones authenticate via <strong>SIM</strong>. Coordinated allocation (no random access between phones — base station schedules everything). <strong>Handoff</strong> when you move between cells. Generations: 2G, 3G, 4G/LTE, 5G.
+  </div>
+
+  <h2>Architecture</h2>
+  <ul>
+    <li><strong>UE</strong> (user equipment) = your phone</li>
+    <li><strong>Base station</strong> = cell tower (eNodeB / gNodeB)</li>
+    <li><strong>Core network</strong> = carrier's backend (auth, billing, gateway to Internet)</li>
+  </ul>
+
+  <h2>Why not WiFi-style?</h2>
+  <p>Cellular is <strong>coordinated</strong>. Base station schedules every uplink/downlink slot for every phone. No CSMA/CA chaos. Better efficiency at scale.</p>
+  <p>Uses combinations of FDM, TDM, CDMA (older), OFDMA (LTE/5G).</p>
+
+  <h2>Handoff (handover)</h2>
+  <p>You move out of cell A's range into cell B's. Phone reports signal strength. Network coordinates: your connection is migrated from A to B. Done in milliseconds. TCP doesn't notice.</p>
+
+  <h2>Generations</h2>
+  <table>
+    <tr><th>Gen</th><th>Era</th><th>What's new</th></tr>
+    <tr><td>2G</td><td>1990s</td><td>Digital voice + SMS (GSM)</td></tr>
+    <tr><td>3G</td><td>2000s</td><td>Packet data (Internet on phone)</td></tr>
+    <tr><td>4G / LTE</td><td>2010s</td><td>All-IP, OFDMA, much higher data rate</td></tr>
+    <tr><td>5G</td><td>2020s</td><td>mmWave, ultra-low latency, network slicing</td></tr>
+  </table>
+
+  <h2>Mobility / IP</h2>
+  <p>Your phone gets an IP from the carrier. As you move, the carrier keeps your IP stable by routing through their core. From the Internet's perspective, you have a normal IP address. Tunneling (GTP) handles the location change underneath.</p>
+
+  <h2>5G features</h2>
+  <ul>
+    <li><strong>mmWave</strong> — high frequency, huge bandwidth, but short range and blocked by walls</li>
+    <li><strong>Network slicing</strong> — virtual networks for different use cases (low latency for cars, high bandwidth for video)</li>
+    <li><strong>Edge computing</strong> — push compute closer to towers</li>
+  </ul>
+</section>
+
+
+<!-- ═════════ GLOSSARY ═════════ -->
+<section class="sec" id="glossary">
+  <div class="section-header">
+    <div class="section-num">§ G · Reference</div>
+    <h1>Glossary</h1>
+    <div class="lede">Every term, monkey-fast.</div>
+  </div>
+
+  <h2>Applications</h2>
+  <table class="kvtable">
+    <tr><td>DNS</td><td>Domain Name System. Names → IP addresses.</td></tr>
+    <tr><td>Name server</td><td>Server that answers DNS queries for a zone.</td></tr>
+    <tr><td>Zone</td><td>Slice of the DNS tree managed by one organization.</td></tr>
+    <tr><td>TLD</td><td>Top-level domain (.com, .edu, .pizza)</td></tr>
+    <tr><td>Stub resolver</td><td>DNS client on your device.</td></tr>
+    <tr><td>Recursive resolver</td><td>Server that walks DNS tree for you. (1.1.1.1, 8.8.8.8)</td></tr>
+    <tr><td>A / AAAA</td><td>Records: domain → IPv4 / IPv6.</td></tr>
+    <tr><td>NS</td><td>Record: zone → authoritative name server.</td></tr>
+    <tr><td>CNAME</td><td>Record: alias domain → another domain.</td></tr>
+    <tr><td>MX</td><td>Record: domain → mail server.</td></tr>
+    <tr><td>TTL</td><td>Time-to-live. How long to cache.</td></tr>
+    <tr><td>Anycast</td><td>Multiple servers, same IP. Routing picks closest.</td></tr>
+    <tr><td>HTTP</td><td>HyperText Transfer Protocol. Plaintext over TCP, port 80.</td></tr>
+    <tr><td>HTTPS</td><td>HTTP over TLS. Port 443.</td></tr>
+    <tr><td>GET / POST</td><td>HTTP methods: fetch / send data.</td></tr>
+    <tr><td>Status code</td><td>200 OK, 404 Not Found, 500 Error, etc.</td></tr>
+    <tr><td>Pipelining</td><td>Multiple HTTP req/resp on one TCP connection.</td></tr>
+    <tr><td>CDN</td><td>Content Delivery Network. Caches content close to users.</td></tr>
+    <tr><td>Origin server</td><td>The original server (vs. a CDN cache).</td></tr>
+    <tr><td>QUIC</td><td>UDP-based transport for HTTP/3.</td></tr>
+  </table>
+
+  <h2>End-to-End</h2>
+  <table class="kvtable">
+    <tr><td>MAC address</td><td>48-bit hardware address. Layer 2 ID.</td></tr>
+    <tr><td>Frame</td><td>L2 packet (Ethernet).</td></tr>
+    <tr><td>CSMA/CD</td><td>Carrier Sense / Collision Detect. Listen before & during.</td></tr>
+    <tr><td>Binary exp. backoff</td><td>Wait random time in [0, 2^N] after N collisions.</td></tr>
+    <tr><td>STP</td><td>Spanning Tree Protocol. Disables links to break loops.</td></tr>
+    <tr><td>BPDU</td><td>STP messages: (root_id, distance, my_id).</td></tr>
+    <tr><td>Learning switch</td><td>Switch that auto-fills forwarding table from observed source MACs.</td></tr>
+    <tr><td>ARP</td><td>"Who has IP X? What's your MAC?"</td></tr>
+    <tr><td>ARP table</td><td>Cache of IP↔MAC mappings.</td></tr>
+    <tr><td>DHCP</td><td>Auto-config: IP, mask, gateway, DNS.</td></tr>
+    <tr><td>DORA</td><td>Discover, Offer, Request, Ack.</td></tr>
+    <tr><td>NAT</td><td>Network Address Translation. Many private IPs → one public.</td></tr>
+    <tr><td>Private IP</td><td>10.x, 172.16-31.x, 192.168.x. Not routable on Internet.</td></tr>
+    <tr><td>Default gateway</td><td>Router for non-local traffic.</td></tr>
+    <tr><td>Subnet mask</td><td>Tells you which IPs are local (e.g. /24).</td></tr>
+    <tr><td>TLS</td><td>Encrypts TCP. HTTPS = HTTP/TLS/TCP.</td></tr>
+    <tr><td>Certificate</td><td>Server's signed identity (verified via CA chain).</td></tr>
+    <tr><td>Handshake</td><td>Initial setup: TCP 3-way, then TLS key exchange.</td></tr>
+  </table>
+
+  <h2>Datacenter</h2>
+  <table class="kvtable">
+    <tr><td>ToR switch</td><td>Top-of-Rack. Connects servers in a rack.</td></tr>
+    <tr><td>Fat-tree / Clos</td><td>Multi-layer switch topology with full bisection bandwidth.</td></tr>
+    <tr><td>Bisection bandwidth</td><td>Total BW across a cut that splits net in half.</td></tr>
+    <tr><td>Mice / Elephants</td><td>Short latency-sensitive vs long throughput-sensitive flows.</td></tr>
+    <tr><td>ECMP</td><td>Equal-Cost Multi-Path. Hash flows to paths.</td></tr>
+    <tr><td>DCTCP</td><td>Datacenter TCP. ECN-based gentle congestion control.</td></tr>
+    <tr><td>ECN</td><td>Explicit Congestion Notification. Bit in IP header.</td></tr>
+    <tr><td>BBR</td><td>Google CC. Detects congestion via delay, not loss.</td></tr>
+    <tr><td>pFabric</td><td>DC CC with per-packet priorities (= remaining flow size).</td></tr>
+    <tr><td>FCT</td><td>Flow Completion Time. DC CC metric.</td></tr>
+    <tr><td>VXLAN</td><td>Tunnel L2 over L3 with 24-bit VNI tag.</td></tr>
+    <tr><td>Locator / Identifier</td><td>Where you are vs. who you are. Separate them so VMs can move.</td></tr>
+    <tr><td>SDN</td><td>Software-Defined Networking. Centralized control of dumb switches.</td></tr>
+    <tr><td>OpenFlow</td><td>API for SDN: install match→action flow rules.</td></tr>
+    <tr><td>Traffic engineering</td><td>Manually steer traffic to specific paths.</td></tr>
+    <tr><td>RDMA</td><td>Remote DMA. Direct memory access to remote machine, no CPU.</td></tr>
+    <tr><td>SmartNIC / DPU</td><td>NIC with its own programmable CPU.</td></tr>
+    <tr><td>P4</td><td>Programmable data plane language.</td></tr>
+  </table>
+
+  <h2>Beyond Client-Server</h2>
+  <table class="kvtable">
+    <tr><td>Multicast</td><td>One sender → group of receivers.</td></tr>
+    <tr><td>IGMP</td><td>Hosts tell local router which groups to join.</td></tr>
+    <tr><td>RPF</td><td>Reverse Path Forwarding. Forward only if pkt arrived on reverse-shortest-path.</td></tr>
+    <tr><td>DVMRP</td><td>Multicast routing. Per-source tree, flood-and-prune.</td></tr>
+    <tr><td>CBT</td><td>Core-Based Tree. Per-group shared tree rooted at core.</td></tr>
+    <tr><td>PIM-SM</td><td>Protocol Independent Multicast - Sparse Mode. Modern CBT-like.</td></tr>
+    <tr><td>Overlay multicast</td><td>App-level tree over unicast.</td></tr>
+    <tr><td>Stretch</td><td>Overlay path / shortest path. ≥ 1.</td></tr>
+    <tr><td>Stress</td><td>Copies of one packet on a single link.</td></tr>
+    <tr><td>Broadcast</td><td>One → all.</td></tr>
+    <tr><td>Scatter / Gather</td><td>Split / collect arrays across nodes.</td></tr>
+    <tr><td>Reduce</td><td>Combine values (sum, max) across nodes.</td></tr>
+    <tr><td>All-reduce</td><td>Reduce, then everyone gets result.</td></tr>
+    <tr><td>Ring all-reduce</td><td>Pass chunks around ring. Bandwidth-optimal.</td></tr>
+    <tr><td>NCCL</td><td>NVIDIA's collective lib for GPUs.</td></tr>
+  </table>
+
+  <h2>Wireless</h2>
+  <table class="kvtable">
+    <tr><td>Attenuation</td><td>Signal weakens with distance (\(1/r^2\) free space).</td></tr>
+    <tr><td>Path loss</td><td>Total attenuation along link.</td></tr>
+    <tr><td>Link budget</td><td>Gains − losses. Must exceed receiver sensitivity.</td></tr>
+    <tr><td>Hidden terminal</td><td>Two senders too far to hear each other but both reach receiver → collide.</td></tr>
+    <tr><td>Exposed terminal</td><td>Sender unnecessarily defers because of nearby unrelated transmission.</td></tr>
+    <tr><td>CSMA/CA</td><td>Collision Avoidance (used in WiFi).</td></tr>
+    <tr><td>RTS / CTS</td><td>Request To Send / Clear To Send. Reserves the channel.</td></tr>
+    <tr><td>MACA / MACAW</td><td>WiFi MAC protocols using RTS/CTS + ACK.</td></tr>
+    <tr><td>UE</td><td>User Equipment (your phone).</td></tr>
+    <tr><td>Base station</td><td>Cell tower (eNodeB / gNodeB).</td></tr>
+    <tr><td>Handoff</td><td>Move connection from one cell to another.</td></tr>
+    <tr><td>OFDMA</td><td>Cellular multiplexing in LTE/5G.</td></tr>
+    <tr><td>mmWave</td><td>5G high-frequency band. Big BW, short range.</td></tr>
+  </table>
+</section>
+
+</main>
+</div><!-- /app -->
+
+<footer>
+  CS 168 · Internet Architecture · Spring 2026 · Applications → Wireless
+</footer>
+
+<script>
+/* ─── Section switching ─── */
+function show(id, link) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('.sb-item').forEach(a => a.classList.remove('active'));
+  if (link) link.classList.add('active');
+  window.scrollTo(0, 0);
+  if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+}
+
+/* ─── DNS trace demo ─── */
+function traceDNS() {
+  const sel = document.getElementById('dns-domain');
+  const domain = sel.value;
+  const out = document.getElementById('dns-trace');
+  const parts = domain.split('.').reverse();
+  const ips = {
+    '.': '198.41.0.4',
+    'edu': '192.5.6.30',
+    'com': '192.5.6.30',
+    'org': '199.19.56.1',
+    'berkeley.edu': '128.32.136.3',
+    'google.com': '216.239.32.10',
+    'stanford.edu': '171.64.7.66',
+    'example.org': '199.43.135.53'
+  };
+  let lines = [];
+  lines.push('<span style="color:#6b7280">$ dig +trace ' + domain + '</span>');
+  let chain = '.';
+  let depth = 0;
+  lines.push('<span style="color:#1f4e7a">→ ask root @ ' + ips['.'] + '</span>');
+  lines.push('  ↳ "ask <strong>.' + parts[0] + '</strong> server @ ' + (ips[parts[0]] || '...') + '"');
+  if (parts.length > 1) {
+    let zone1 = parts[0];
+    lines.push('<span style="color:#1f4e7a">→ ask .' + zone1 + ' @ ' + (ips[zone1] || '...') + '</span>');
+    let zone2 = parts[1] + '.' + parts[0];
+    lines.push('  ↳ "ask <strong>' + zone2 + '</strong> server @ ' + (ips[zone2] || '...') + '"');
+    lines.push('<span style="color:#1f4e7a">→ ask ' + zone2 + ' @ ' + (ips[zone2] || '...') + '</span>');
+    lines.push('  ↳ <strong style="color:#4a6b3a">' + domain + ' = ' + (Math.floor(Math.random()*200+10) + '.' + Math.floor(Math.random()*250) + '.' + Math.floor(Math.random()*250) + '.' + Math.floor(Math.random()*250)) + '</strong>');
+  }
+  out.innerHTML = lines.join('<br>');
+}
+
+/* ─── Backoff demo ─── */
+function updateBackoff() {
+  const n = parseInt(document.getElementById('bk-n').value);
+  document.getElementById('bk-n-val').textContent = n;
+  const w = Math.pow(2, n);
+  document.getElementById('bk-window').textContent = w;
+  document.getElementById('bk-avg').textContent = (w/2).toFixed(1);
+  document.getElementById('bk-max').textContent = w;
+}
+
+/* ─── Arrow-key section navigation ─── */
+window.addEventListener('keydown', (e) => {
+  // ignore if user is typing in an input/textarea/contenteditable
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const items = Array.from(document.querySelectorAll('.sb-item'));
+  if (!items.length) return;
+  let idx = items.findIndex(el => el.classList.contains('active'));
+  if (idx === -1) idx = 0;
+  const next = e.key === 'ArrowDown' ? Math.min(idx + 1, items.length - 1)
+                                     : Math.max(idx - 1, 0);
+  if (next === idx) return;
+  e.preventDefault();
+  items[next].click();
+  items[next].scrollIntoView({block: 'nearest'});
+  window.scrollTo({top: 0, behavior: 'instant'});
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  traceDNS();
+  updateBackoff();
+});
+</script>
+
+</body>
+</html>
