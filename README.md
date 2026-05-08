@@ -1,2 +1,2 @@
 # cs-168-visualizer
-Sequel to Math 54 Visualizer
+A beautiful walkthrough of CS 168 in far fewer words than the textbook uses.
